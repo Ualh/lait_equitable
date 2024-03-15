@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    
+        <script>
+            L_NO_TOUCH = false;
+            L_DISABLE_3D = false;
+        </script>
+    
+    <style>html, body {width: 100%;height: 100%;margin: 0;padding: 0;}</style>
+    <style>#map {position:absolute;top:0;bottom:0;right:0;left:0;}</style>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_6af2b4de44a2620ddc2bc6ba0aa432c0 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+        
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_6af2b4de44a2620ddc2bc6ba0aa432c0" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_6af2b4de44a2620ddc2bc6ba0aa432c0 = L.map(
+                "map_6af2b4de44a2620ddc2bc6ba0aa432c0",
+                {
+                    center: [46.8182, 8.2275],
+                    crs: L.CRS.EPSG3857,
+                    zoom: 7,
+                    zoomControl: true,
+                    preferCanvas: false,
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_edd9fd3923b66016143b3ac8fb1e584f = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {"attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors", "detectRetina": false, "maxNativeZoom": 19, "maxZoom": 19, "minZoom": 0, "noWrap": false, "opacity": 1, "subdomains": "abc", "tms": false}
+            );
+        
+    
+            tile_layer_edd9fd3923b66016143b3ac8fb1e584f.addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+            var marker_26093d734e94d35cc43bbcf4bd5c983e = L.marker(
+                [47.4736827, 8.3086822],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_5fc2f63b04bb6149ba1e6fd7e50e2840 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_97f4b5414358a6814967ba85fadef94b = $(`<div id="html_97f4b5414358a6814967ba85fadef94b" style="width: 100.0%; height: 100.0%;">Baden: Total General - 571.226</div>`)[0];
+                popup_5fc2f63b04bb6149ba1e6fd7e50e2840.setContent(html_97f4b5414358a6814967ba85fadef94b);
+            
+        
+
+        marker_26093d734e94d35cc43bbcf4bd5c983e.bindPopup(popup_5fc2f63b04bb6149ba1e6fd7e50e2840)
+        ;
+
+        
+    
+    
+            var marker_96cc6375f7c4fe30a07e3cf5f4ac8d97 = L.marker(
+                [47.5581077, 7.5878261],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_eeb8e47a79d855aa70c4e892a5acfba8 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_bd82c666091974c9f1a91234d59746c7 = $(`<div id="html_bd82c666091974c9f1a91234d59746c7" style="width: 100.0%; height: 100.0%;">Bâle: Total General - 557.732</div>`)[0];
+                popup_eeb8e47a79d855aa70c4e892a5acfba8.setContent(html_bd82c666091974c9f1a91234d59746c7);
+            
+        
+
+        marker_96cc6375f7c4fe30a07e3cf5f4ac8d97.bindPopup(popup_eeb8e47a79d855aa70c4e892a5acfba8)
+        ;
+
+        
+    
+    
+            var marker_d04a04a45df7993d8140adbe2668b171 = L.marker(
+                [45.8491908, 9.0070811],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_e523e75dd725b4058b17da13f7753cc3 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_47958fc6d793e9037f53217fcd125e39 = $(`<div id="html_47958fc6d793e9037f53217fcd125e39" style="width: 100.0%; height: 100.0%;">Balerna: Total General - 1063.778</div>`)[0];
+                popup_e523e75dd725b4058b17da13f7753cc3.setContent(html_47958fc6d793e9037f53217fcd125e39);
+            
+        
+
+        marker_d04a04a45df7993d8140adbe2668b171.bindPopup(popup_e523e75dd725b4058b17da13f7753cc3)
+        ;
+
+        
+    
+    
+            var marker_543180c90d6a00ecfc24c0ea52f2d743 = L.marker(
+                [47.1402077, 7.2439029],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_cc3acb11bf31efb3b4caeb2b500b6f26 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_677fb801dcd99d595aee6f9f516eb721 = $(`<div id="html_677fb801dcd99d595aee6f9f516eb721" style="width: 100.0%; height: 100.0%;">Bienne: Total General - 5998.01</div>`)[0];
+                popup_cc3acb11bf31efb3b4caeb2b500b6f26.setContent(html_677fb801dcd99d595aee6f9f516eb721);
+            
+        
+
+        marker_543180c90d6a00ecfc24c0ea52f2d743.bindPopup(popup_cc3acb11bf31efb3b4caeb2b500b6f26)
+        ;
+
+        
+    
+    
+            var marker_0a163c3e93b003d95a42a93903b18ef0 = L.marker(
+                [46.5285212, 6.5726698],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_b5ca862b5a2f7afa8d903f0662fc1bea = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_9da3b0a7f5d10f68302a0140934b680d = $(`<div id="html_9da3b0a7f5d10f68302a0140934b680d" style="width: 100.0%; height: 100.0%;">Chavannes: Total General - 12796.741999999998</div>`)[0];
+                popup_b5ca862b5a2f7afa8d903f0662fc1bea.setContent(html_9da3b0a7f5d10f68302a0140934b680d);
+            
+        
+
+        marker_0a163c3e93b003d95a42a93903b18ef0.bindPopup(popup_b5ca862b5a2f7afa8d903f0662fc1bea)
+        ;
+
+        
+    
+    
+            var marker_c982d5cadda7f1bcbbeac0cd5409431a = L.marker(
+                [46.854747, 9.5264904],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_5d70eea700239e9999f0685a9d388310 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_5b234e20d46e8b738d0afe654ff5a37b = $(`<div id="html_5b234e20d46e8b738d0afe654ff5a37b" style="width: 100.0%; height: 100.0%;">Chur: Total General - 326.962</div>`)[0];
+                popup_5d70eea700239e9999f0685a9d388310.setContent(html_5b234e20d46e8b738d0afe654ff5a37b);
+            
+        
+
+        marker_c982d5cadda7f1bcbbeac0cd5409431a.bindPopup(popup_5d70eea700239e9999f0685a9d388310)
+        ;
+
+        
+    
+    
+            var marker_23ba319359e329f45feea202e3db9d00 = L.marker(
+                [47.3615882, 7.354445],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_840f151f8cca7a6e80fb897270d22cc7 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_f86ce2c675fbd472617808c65eec9267 = $(`<div id="html_f86ce2c675fbd472617808c65eec9267" style="width: 100.0%; height: 100.0%;">Delémont: Total General - 3782.29</div>`)[0];
+                popup_840f151f8cca7a6e80fb897270d22cc7.setContent(html_f86ce2c675fbd472617808c65eec9267);
+            
+        
+
+        marker_23ba319359e329f45feea202e3db9d00.bindPopup(popup_840f151f8cca7a6e80fb897270d22cc7)
+        ;
+
+        
+    
+    
+            var marker_ac60020fdac280fe885927e353e162aa = L.marker(
+                [47.0752429, 8.2839456],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_b4d6416c185c04f0838f5769968943fe = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_c05593482d487c74166203a0fa9e6f5a = $(`<div id="html_c05593482d487c74166203a0fa9e6f5a" style="width: 100.0%; height: 100.0%;">Emmen: Total General - 1170.1860000000001</div>`)[0];
+                popup_b4d6416c185c04f0838f5769968943fe.setContent(html_c05593482d487c74166203a0fa9e6f5a);
+            
+        
+
+        marker_ac60020fdac280fe885927e353e162aa.bindPopup(popup_b4d6416c185c04f0838f5769968943fe)
+        ;
+
+        
+    
+    
+            var marker_eb3fae8c4e6459d71e25610fb2ae26f7 = L.marker(
+                [46.8055656, 7.1612669],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_8844975dc8bdfdbab61f75099beb9784 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_a8ab51183b9468904f43a7594d443ff7 = $(`<div id="html_a8ab51183b9468904f43a7594d443ff7" style="width: 100.0%; height: 100.0%;">Fribourg: Total General - 14208.658</div>`)[0];
+                popup_8844975dc8bdfdbab61f75099beb9784.setContent(html_a8ab51183b9468904f43a7594d443ff7);
+            
+        
+
+        marker_eb3fae8c4e6459d71e25610fb2ae26f7.bindPopup(popup_8844975dc8bdfdbab61f75099beb9784)
+        ;
+
+        
+    
+    
+            var marker_72fe2b8ae3650f8f9759c434efc1c4e4 = L.marker(
+                [46.2047169, 6.1423106290939335],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_2aef3c06d83208e2943ee4dbe59f4657 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_7baec0cbc85bad9537c7e83b6c3b9ac6 = $(`<div id="html_7baec0cbc85bad9537c7e83b6c3b9ac6" style="width: 100.0%; height: 100.0%;">Genève: Total General - 15091.186</div>`)[0];
+                popup_2aef3c06d83208e2943ee4dbe59f4657.setContent(html_7baec0cbc85bad9537c7e83b6c3b9ac6);
+            
+        
+
+        marker_72fe2b8ae3650f8f9759c434efc1c4e4.bindPopup(popup_2aef3c06d83208e2943ee4dbe59f4657)
+        ;
+
+        
+    
+    
+            var marker_34a8c2b03bf904f660206a44b0e6f6d2 = L.marker(
+                [46.5218269, 6.6327025],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_22bb9abd7d571393e9b3349675bb1e43 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_4a26d2d94df61bdcbf8322b2fae193be = $(`<div id="html_4a26d2d94df61bdcbf8322b2fae193be" style="width: 100.0%; height: 100.0%;">Lausanne: Total General - 14868.984</div>`)[0];
+                popup_22bb9abd7d571393e9b3349675bb1e43.setContent(html_4a26d2d94df61bdcbf8322b2fae193be);
+            
+        
+
+        marker_34a8c2b03bf904f660206a44b0e6f6d2.bindPopup(popup_22bb9abd7d571393e9b3349675bb1e43)
+        ;
+
+        
+    
+    
+            var marker_511fc54c470870caabc3d66c5c5f8620 = L.marker(
+                [46.0050102, 8.9520281],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_e7a1ca2d5490d62fb92764a7dabb0880 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_e6901c87b4622a05826efa4c04fc1738 = $(`<div id="html_e6901c87b4622a05826efa4c04fc1738" style="width: 100.0%; height: 100.0%;">Lugano: Total General - 1458.128</div>`)[0];
+                popup_e7a1ca2d5490d62fb92764a7dabb0880.setContent(html_e6901c87b4622a05826efa4c04fc1738);
+            
+        
+
+        marker_511fc54c470870caabc3d66c5c5f8620.bindPopup(popup_e7a1ca2d5490d62fb92764a7dabb0880)
+        ;
+
+        
+    
+    
+            var marker_c8c384a314072070162b4d607d2cc490 = L.marker(
+                [47.009134, 7.0090197],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_40f1bc81088d0fee7328739ef76dc5c2 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_d0b0f8b4034dbc75f1fdf603d2400c37 = $(`<div id="html_d0b0f8b4034dbc75f1fdf603d2400c37" style="width: 100.0%; height: 100.0%;">Marin: Total General - 26921.1</div>`)[0];
+                popup_40f1bc81088d0fee7328739ef76dc5c2.setContent(html_d0b0f8b4034dbc75f1fdf603d2400c37);
+            
+        
+
+        marker_c8c384a314072070162b4d607d2cc490.bindPopup(popup_40f1bc81088d0fee7328739ef76dc5c2)
+        ;
+
+        
+    
+    
+            var marker_28ea1107d0cf859994a4ad8784885871 = L.marker(
+                [46.252844, 6.9478263],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_8c6f4ec9bb075da2d40dad237514b688 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_74f90ca32155e26be4611f181a925086 = $(`<div id="html_74f90ca32155e26be4611f181a925086" style="width: 100.0%; height: 100.0%;">Monthey: Total General - 39802.592000000004</div>`)[0];
+                popup_8c6f4ec9bb075da2d40dad237514b688.setContent(html_74f90ca32155e26be4611f181a925086);
+            
+        
+
+        marker_28ea1107d0cf859994a4ad8784885871.bindPopup(popup_8c6f4ec9bb075da2d40dad237514b688)
+        ;
+
+        
+    
+    
+            var marker_8933dfb55b6021838c9e1db93a52064f = L.marker(
+                [46.5093268, 6.498317],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_6d38c6d1d01f564fa88912d4251d7604 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_002ec0603dfda45835c398d54737b2ed = $(`<div id="html_002ec0603dfda45835c398d54737b2ed" style="width: 100.0%; height: 100.0%;">Morges: Total General - 7940.012</div>`)[0];
+                popup_6d38c6d1d01f564fa88912d4251d7604.setContent(html_002ec0603dfda45835c398d54737b2ed);
+            
+        
+
+        marker_8933dfb55b6021838c9e1db93a52064f.bindPopup(popup_6d38c6d1d01f564fa88912d4251d7604)
+        ;
+
+        
+    
+    
+            var marker_4aecd12f18588710709206d02c1eca8e = L.marker(
+                [46.3820585, 6.2402791],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_031d128ec9221c0812b4f85a237fdee5 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_0a519faeaf18996c4d7bd204386e0f29 = $(`<div id="html_0a519faeaf18996c4d7bd204386e0f29" style="width: 100.0%; height: 100.0%;">Nyon: Total General - 3370.256</div>`)[0];
+                popup_031d128ec9221c0812b4f85a237fdee5.setContent(html_0a519faeaf18996c4d7bd204386e0f29);
+            
+        
+
+        marker_4aecd12f18588710709206d02c1eca8e.bindPopup(popup_031d128ec9221c0812b4f85a237fdee5)
+        ;
+
+        
+    
+    
+            var marker_f0e8475f5d5c67e0795f0e49b2c6feef = L.marker(
+                [47.2266532, 8.8164042],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_3e3b7671f8ce62b04fbefd747528ac86 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_41d3794938a4a105270a2f22dcb7173c = $(`<div id="html_41d3794938a4a105270a2f22dcb7173c" style="width: 100.0%; height: 100.0%;">Rapperswil: Total General - 391.45799999999997</div>`)[0];
+                popup_3e3b7671f8ce62b04fbefd747528ac86.setContent(html_41d3794938a4a105270a2f22dcb7173c);
+            
+        
+
+        marker_f0e8475f5d5c67e0795f0e49b2c6feef.bindPopup(popup_3e3b7671f8ce62b04fbefd747528ac86)
+        ;
+
+        
+    
+    
+            var marker_83bb3f07800a364cca1780c53690c18d = L.marker(
+                [47.425618, 9.3762397],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_c4e3ba915022f878d0f32825d9d12241 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_d54ca3a50bb5ea0bdbdd081c584b4335 = $(`<div id="html_d54ca3a50bb5ea0bdbdd081c584b4335" style="width: 100.0%; height: 100.0%;">St. Gall: Total General - 489.73</div>`)[0];
+                popup_c4e3ba915022f878d0f32825d9d12241.setContent(html_d54ca3a50bb5ea0bdbdd081c584b4335);
+            
+        
+
+        marker_83bb3f07800a364cca1780c53690c18d.bindPopup(popup_c4e3ba915022f878d0f32825d9d12241)
+        ;
+
+        
+    
+    
+            var marker_6859ec7895da5382bf2cbdeead27da25 = L.marker(
+                [46.1588576, 8.969006],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_be683313553a1d520ba4d4f5ff894162 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_8b01259bc9ad0adc47ddf2422abbfdd6 = $(`<div id="html_8b01259bc9ad0adc47ddf2422abbfdd6" style="width: 100.0%; height: 100.0%;">San Antonino: Total General - 948.174</div>`)[0];
+                popup_be683313553a1d520ba4d4f5ff894162.setContent(html_8b01259bc9ad0adc47ddf2422abbfdd6);
+            
+        
+
+        marker_6859ec7895da5382bf2cbdeead27da25.bindPopup(popup_be683313553a1d520ba4d4f5ff894162)
+        ;
+
+        
+    
+    
+            var marker_d0d79dafc665a4d8bd4140e293dc5ec2 = L.marker(
+                [47.0482641, 9.4401995],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_b94b0c8eb394aa2217d27544ad58153d = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_906fb6b15a924e6f4fe0bea52384052d = $(`<div id="html_906fb6b15a924e6f4fe0bea52384052d" style="width: 100.0%; height: 100.0%;">Sargans: Total General - 431.076</div>`)[0];
+                popup_b94b0c8eb394aa2217d27544ad58153d.setContent(html_906fb6b15a924e6f4fe0bea52384052d);
+            
+        
+
+        marker_d0d79dafc665a4d8bd4140e293dc5ec2.bindPopup(popup_b94b0c8eb394aa2217d27544ad58153d)
+        ;
+
+        
+    
+    
+            var marker_71eab6b0039c561489a049ca7e303047 = L.marker(
+                [46.2922522, 7.5323195],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_bf5973361a91e53d8cb6005b1ee18161 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_65631ed63e103a651f9c092978d75905 = $(`<div id="html_65631ed63e103a651f9c092978d75905" style="width: 100.0%; height: 100.0%;">Sierre: Total General - 29548.824</div>`)[0];
+                popup_bf5973361a91e53d8cb6005b1ee18161.setContent(html_65631ed63e103a651f9c092978d75905);
+            
+        
+
+        marker_71eab6b0039c561489a049ca7e303047.bindPopup(popup_bf5973361a91e53d8cb6005b1ee18161)
+        ;
+
+        
+    
+    
+            var marker_a28f0eae57961ed5c392cc41815aebbe = L.marker(
+                [46.2311749, 7.3588795],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_3b73e5d840d35c774030cb0a920ab981 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_16f602c90e2f49d0789ff5df68995c88 = $(`<div id="html_16f602c90e2f49d0789ff5df68995c88" style="width: 100.0%; height: 100.0%;">Sion: Total General - 15158.846</div>`)[0];
+                popup_3b73e5d840d35c774030cb0a920ab981.setContent(html_16f602c90e2f49d0789ff5df68995c88);
+            
+        
+
+        marker_a28f0eae57961ed5c392cc41815aebbe.bindPopup(popup_3b73e5d840d35c774030cb0a920ab981)
+        ;
+
+        
+    
+    
+            var marker_12f9a0da6c0eaf72b4aa7b22b7918464 = L.marker(
+                [46.2399181, 6.1982222],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_b861226e7ea232bd45e4be251fecc883 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_0fcc4aa7c601b3352def95a88616603b = $(`<div id="html_0fcc4aa7c601b3352def95a88616603b" style="width: 100.0%; height: 100.0%;">Vesenaz: Total General - 5026.776</div>`)[0];
+                popup_b861226e7ea232bd45e4be251fecc883.setContent(html_0fcc4aa7c601b3352def95a88616603b);
+            
+        
+
+        marker_12f9a0da6c0eaf72b4aa7b22b7918464.bindPopup(popup_b861226e7ea232bd45e4be251fecc883)
+        ;
+
+        
+    
+    
+            var marker_74c074e9d61f73799232ba1733deb5d5 = L.marker(
+                [46.4602978, 6.8418655],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_6adf8890b3248a059b8ea696fc481b82 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_5a206a9cc495fe6299c0e54bf1073310 = $(`<div id="html_5a206a9cc495fe6299c0e54bf1073310" style="width: 100.0%; height: 100.0%;">Vevey: Total General - 23123.688</div>`)[0];
+                popup_6adf8890b3248a059b8ea696fc481b82.setContent(html_5a206a9cc495fe6299c0e54bf1073310);
+            
+        
+
+        marker_74c074e9d61f73799232ba1733deb5d5.bindPopup(popup_6adf8890b3248a059b8ea696fc481b82)
+        ;
+
+        
+    
+    
+            var marker_8c44fb7b69f2aa27fc0d05afc74ae68e = L.marker(
+                [46.0246543, 8.936741],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_1e27696883a4fff563fb94fddf4d59f6 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_49c420c3f306bbd20d5f0a835f6faa61 = $(`<div id="html_49c420c3f306bbd20d5f0a835f6faa61" style="width: 100.0%; height: 100.0%;">Vezia: Total General - 1679.6660000000002</div>`)[0];
+                popup_1e27696883a4fff563fb94fddf4d59f6.setContent(html_49c420c3f306bbd20d5f0a835f6faa61);
+            
+        
+
+        marker_8c44fb7b69f2aa27fc0d05afc74ae68e.bindPopup(popup_1e27696883a4fff563fb94fddf4d59f6)
+        ;
+
+        
+    
+    
+            var marker_b2c9e9a3e5e9cccc542c93a300815c6d = L.marker(
+                [46.7785711, 6.6409158],
+                {}
+            ).addTo(map_6af2b4de44a2620ddc2bc6ba0aa432c0);
+        
+    
+        var popup_955284235352aff0859c3955fbeb7174 = L.popup({"maxWidth": "100%"});
+
+        
+            
+                var html_e09cc2573ac7bef17ea55a85a3b80e97 = $(`<div id="html_e09cc2573ac7bef17ea55a85a3b80e97" style="width: 100.0%; height: 100.0%;">Yverdon: Total General - 10287.003999999999</div>`)[0];
+                popup_955284235352aff0859c3955fbeb7174.setContent(html_e09cc2573ac7bef17ea55a85a3b80e97);
+            
+        
+
+        marker_b2c9e9a3e5e9cccc542c93a300815c6d.bindPopup(popup_955284235352aff0859c3955fbeb7174)
+        ;
+
+        
+    
+</script>
+</html>
