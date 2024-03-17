@@ -9,3 +9,14 @@ source(here::here("scripts/setup.R"))
 * Wrangling/cleaning
 * Spotting mistakes and missing data (could be part of EDA too)
 * Listing anomalies and outliers (could be part of EDA too)
+
+# Load datasets
+```{r}
+library(data.table)
+file_path <- "../data/"
+
+df_producteur <- fread(paste0(file_path, "Producteur_lait_Donnes_17_03_2024 15_57_31.csv"))
+
+#exampledata <- read_excel(paste0(file_path, "exampledata.xlsx"), sheet = 1)
+```
+
