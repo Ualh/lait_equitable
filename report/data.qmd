@@ -24,7 +24,7 @@ df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet
 ## Description
 ```{r}
 df_producteur$date <- as.Date(df_producteur$date)
-
+ library(kableExtra)
 # Create a tibble with variable descriptions for df_producteur
 variable_table <- tibble(
   Variable = c("Date", "prix_bio", "prix_non_bio", "delta", "Delta_pourcent"),

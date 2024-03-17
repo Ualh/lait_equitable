@@ -7,11 +7,11 @@ packages <- c(
   "here", # for the project's organization
   "tidyverse", # for wrangling
   "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts',# for plotting
-  "fpp3", 'viridis', 'plotly'
+  "fpp3", 'viridis', 'plotly', 'kableExtra'
 )
 purrr::walk(packages, library, character.only = TRUE)
 
-######################################################
+#############################s#########################
 ## The following sets a few option for nice reports ##
 ######################################################
 
