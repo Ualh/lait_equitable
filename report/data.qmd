@@ -10,7 +10,7 @@ source(here::here("scripts/setup.R"))
 * Spotting mistakes and missing data (could be part of EDA too)
 * Listing anomalies and outliers (could be part of EDA too)
 
-# Load datasets
+## Load datasets
 ```{r}
 library(data.table)
 
@@ -21,34 +21,27 @@ file_path <- "../data/"
 df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
 ```
 
+## Description
 ```{r}
 df_producteur$date <- as.Date(df_producteur$date)
-head(df_producteur)
-str(df_producteur)
+
+# Create a tibble with variable descriptions for df_producteur
+variable_table <- tibble(
+  Variable = c("Date", "prix_bio", "prix_non_bio", "delta", "Delta_pourcent"),
+  Description = c(
+    "The date when the prices were recorded, in a year-month-day format.",
+    "The recorded price of organic milk on the given date.",
+    "The recorded price of non-organic milk on the given date.",
+    "The absolute difference between the organic and non-organic milk prices.",
+    "The percentage difference between the organic and non-organic milk prices."
+  )
+)
+
+# Display the table using kableExtra
+variable_table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+
 ```
 
-```{r}
-# Create xts object
-prices_xts <- xts(df_producteur[, c("prix_bio", "prix_non_bio")], order.by = df_producteur$date)
-
-# Plot using dygraphs
-dygraph(prices_xts, main = "Trends in Milk Prices (Organic vs. Non-Organic)", width = "600px", height = "400px") %>%
-  dySeries("prix_bio", label = "Organic Price", color = "#24918d") %>%
-  dySeries("prix_non_bio", label = "Non-Organic Price", color = "#7e57c2") %>%
-  dyOptions(stackedGraph = FALSE) %>%
-  dyRangeSelector(height = 20)
-
-
-# Create an xts object for the delta series, ensuring the series name is retained
-delta_xts <- xts(x = df_producteur[,"delta", drop = FALSE], order.by = df_producteur$date)
-
-# Plot using dygraphs
-p_delta <- dygraph(delta_xts, main = "Difference in Prices Between Organic and Non-Organic Milk Over Time", width = "600px", height = "400px") %>%
-  dySeries("delta", label = "Delta in Price", color = "#24918d") %>%
-  dyOptions(stackedGraph = FALSE) %>%
-  dyRangeSelector(height = 20)
-
-# Print the dygraph to display it
-p_delta
-```
 
