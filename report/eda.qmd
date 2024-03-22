@@ -66,22 +66,3 @@ interactive_plot_seaso_2 <- interactive_plot_seaso_2 %>%
 # Display the interactive plot
 interactive_plot_seaso_2
 ```
-
-## Map
-```{python}
-import pandas as pd
-
-# Define the path to your xlsb file
-file_path = "data/Produits laitiers équitables - 2023.xlsb"
-
-# Use pyxlsb to open the file and read it into a pandas dataframe
-# Adjust the sheet name as necessary
-df = pd.read_excel(file_path, engine='pyxlsb', sheet_name='Par SM')
-
-# Remove the first five rows
-df = df.iloc[6:]
-df.head()
-print(df)
-
-
-```

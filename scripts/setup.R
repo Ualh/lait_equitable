@@ -34,11 +34,24 @@ packages <- c(
   "here", # for the project's organization
   "tidyverse", # for wrangling
   "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts',# for plotting
-  "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl", "kableExtra"
+  "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl"
 )
 purrr::walk(packages, function(pkg){
   if (!require(pkg, character.only = TRUE)) {
     install.packages(pkg)
+  }
+})
+
+# load the reticulate library
+library(reticulate)
+
+# define the Python packages
+python_packages <- c("pandas", "numpy", "matplotlib", "pyxlsb")
+
+# walk through the packages and install them if they are not already installed
+purrr::walk(python_packages, function(pkg){
+  if (!py_module_available(pkg)) {
+    py_install(pkg)
   }
 })
 
