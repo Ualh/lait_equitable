@@ -30,9 +30,13 @@ packages <- c(
   "here", # for the project's organization
   "tidyverse", # for wrangling
   "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts',# for plotting
-  "fpp3", 'viridis', 'plotly', 'kableExtra'
+  "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl"
 )
-purrr::walk(packages, library, character.only = TRUE)
+purrr::walk(packages, function(pkg){
+  if (!require(pkg, character.only = TRUE)) {
+    install.packages(pkg)
+  }
+})
 
 #############################s#########################
 ## The following sets a few option for nice reports ##
