@@ -44,14 +44,17 @@ variable_table %>%
 
 ```
 
-
+```{python}
+import os
+print(os.getcwd())  # In Python
+```
 ## Map
 ```{python}
 import pandas as pd
 import os
 
 # Define the path to your xlsb file
-file_path = os.path.join("data", "Produits laitiers équitables - 2023.xlsb")
+file_path = os.path.join("../data", "Produits laitiers équitables - 2023.xlsb")
 
 # Use pyxlsb to open the file and read it into a pandas dataframe
 # Adjust the sheet name as necessary
@@ -59,4 +62,128 @@ df = pd.read_excel(file_path, engine='pyxlsb', sheet_name='Par SM')
 
 # Remove the first five rows
 df = df.iloc[6:]
+
+#rename columns
+# Define the mapping of old column names to new column names
+column_mapping = {
+    'Quantités vendues - année 2023': 'Line Labels',
+    'Unnamed: 1': '01/01/2023',
+    'Unnamed: 2': '02/01/2023',
+    'Unnamed: 3': '03/01/2023',
+    'Unnamed: 4': '04/01/2023',
+    'Unnamed: 5': '05/01/2023',
+    'Unnamed: 6': '06/01/2023',
+    'Unnamed: 7': '07/01/2023',
+    'Unnamed: 8': '08/01/2023',
+    'Unnamed: 9': '09/01/2023',
+    'Unnamed: 10': '10/01/2023',
+    'Unnamed: 11': '11/01/2023',
+    'Unnamed: 12': '12/01/2023',
+    'Unnamed: 13': 'Total General'
+}
+
+# Assuming df is your existing DataFrame
+# Rename the columns using the provided mapping
+df.rename(columns=column_mapping, inplace=True)
+
+df.loc[df['Line Labels'] == 'Saint-Gall Webersbleiche', 'Line Labels'] = 'St. Gall'
+data = {
+    'City': df['Line Labels'].tolist(),
+    'Total General': df['Total General'].tolist()
+}
+
+# Convert the data into a DataFrame
+df_map = pd.DataFrame(data)
+
+import folium
+from geopy.geocoders import Nominatim
+import time
+# Instantiate the geolocator
+geolocator = Nominatim(user_agent="le_stores")
+
+# Function to get latitude and longitude
+def get_lat_lon(city):
+    try:
+        time.sleep(1)  # Simple rate-limiting mechanism
+        location = geolocator.geocode(city + ', Switzerland')
+        return location.latitude, location.longitude
+    except AttributeError:
+        return None, None
+
+# Apply the function to get latitudes and longitudes
+try:
+    df_map[['Lat', 'Lon']] = df_map.apply(lambda row: pd.Series(get_lat_lon(row['City'])), axis=1)
+    df_map = df_map[:-1]  # Remove the last row as before
+except Exception as e:
+    print(f"An error occurred: {e}")
+
+# Create a map
+m = folium.Map(location=[46.8182, 8.2275], zoom_start=7, tiles='Cartodb Positron', attr='Map data © OpenStreetMap contributors, CC-BY-SA, Imagery © Stamen Design') # Centered on Switzerland
+
+# Add markers
+for index, row in df_map.iterrows():
+    folium.Marker(
+        [row['Lat'], row['Lon']],
+        popup=f"{row['City']}: Total General - {row['Total General']}",
+    ).add_to(m)
+m
+# Display the map
+m.save('../report/maps/swiss_cities_map2.html')
+
+import branca.colormap as cmp
+# Create a linear color scale
+max_sales = df_map['Total General'].max()
+min_sales = df_map['Total General'].min()
+color_scale = cmp.linear.viridis.scale(min_sales, max_sales)
+color_scale.caption = 'Sales Intensity'
+
+# Create a map with 'Stamen Terrain' tiles
+m = folium.Map(location=[46.8182, 8.2275], zoom_start=7, tiles='Cartodb Positron',  attr='Map dat')
+
+# Add markers with colors based on the linear color scale
+for index, row in df_map.iterrows():
+    if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
+        folium.CircleMarker(
+            location=[row['Lat'], row['Lon']],
+            radius=5,  # Fixed radius for each marker
+            popup=f"{row['City']}: Total General - {row['Total General']}",
+            color=color_scale(row['Total General']),  # Color based on sales
+            fill=True,
+            fill_color=color_scale(row['Total General'])
+        ).add_to(m)
+
+# Add the color scale legend to the map
+m.add_child(color_scale)
+m
+# Display the map
+m.save('../report/maps/swiss_cities_map_gradient.html')
+
+# Function to calculate radius based on sales volume
+def calculate_radius(volume, max_volume, min_volume, max_radius=20):
+    # Normalize the volume to a value between 0 and 1
+    normalized_volume = (volume - min_volume) / (max_volume - min_volume)
+    # Scale the normalized volume to a radius value
+    return normalized_volume * max_radius + 5  # Minimum radius of 5
+
+# Create a map centered on the geographic mean of the locations
+m = folium.Map(location=[46.8182, 8.2275], zoom_start=7, tiles='Cartodb Positron', attr='Map data')
+
+# Add markers with dynamic radius based on the 'Total General' column
+for index, row in df_map.iterrows():
+    if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
+        radius = calculate_radius(row['Total General'], max_sales, min_sales)
+        folium.CircleMarker(
+            location=[row['Lat'], row['Lon']],
+            radius=radius,  # Dynamic radius based on sales volume
+            popup=f"{row['City']}: Total General - {row['Total General']}",
+            color=color_scale(row['Total General']),
+            fill=True,
+            fill_color=color_scale(row['Total General'])
+        ).add_to(m)
+
+# Add the color scale legend to the map
+m.add_child(color_scale)
+m
+# Save the map to an HTML file
+m.save('../report/maps/swiss_cities_map_bubbles.html')
 ```

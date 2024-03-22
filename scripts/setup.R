@@ -16,11 +16,16 @@
 ########################################
 ## The following sets the python path ##
 ########################################
-# library(reticulate)
-# use_python("C:/Python312/python.exe")
-# py_config()
-# reticulate::use_condaenv("NAME_OF_YOUR_ENVIRONMENT")
 
+### /!\ uncomment YOUR OPTIOM /!\ ###
+#option 1 - run python locally
+library(reticulate)
+Sys.setenv(RETICULATE_PYTHON = "C:/Python312/python.exe")
+use_python("C:/Python312/python.exe", required = TRUE)
+py_config()
+
+# option 2
+# reticulate::use_condaenv("NAME_OF_YOUR_ENVIRONMENT")
 # if (!require(kableExtra)) {
 #   install.packages('kableExtra')
 # }
@@ -42,11 +47,8 @@ purrr::walk(packages, function(pkg){
   }
 })
 
-# load the reticulate library
-library(reticulate)
-
 # define the Python packages
-python_packages <- c("pandas", "numpy", "matplotlib", "pyxlsb")
+python_packages <- c("pandas", "numpy", "matplotlib", "pyxlsb", "folium", "geopy", "branca")
 
 # walk through the packages and install them if they are not already installed
 purrr::walk(python_packages, function(pkg){
