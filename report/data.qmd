@@ -127,8 +127,6 @@ for index, row in df_map.iterrows():
         popup=f"{row['City']}: Total General - {row['Total General']}",
     ).add_to(m)
 m
-# Display the map
-m.save('../report/maps/swiss_cities_map2.html')
 
 import branca.colormap as cmp
 # Create a linear color scale
@@ -154,9 +152,6 @@ for index, row in df_map.iterrows():
 
 # Add the color scale legend to the map
 m.add_child(color_scale)
-m
-# Display the map
-m.save('../report/maps/swiss_cities_map_gradient.html')
 
 # Function to calculate radius based on sales volume
 def calculate_radius(volume, max_volume, min_volume, max_radius=20):
@@ -183,7 +178,4 @@ for index, row in df_map.iterrows():
 
 # Add the color scale legend to the map
 m.add_child(color_scale)
-m
-# Save the map to an HTML file
-m.save('../report/maps/swiss_cities_map_bubbles.html')
 ```
