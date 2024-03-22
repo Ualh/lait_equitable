@@ -1,3 +1,26 @@
+##########################################################
+## The following uses renv to help with reproducibility ##
+##########################################################
+
+# Uncomment the codes in this section if you would like to use it with your
+# Check if renv is installed and load it
+# if (!require("renv", character.only = TRUE)) {
+#   install.packages("renv")
+#   library("renv", character.only = TRUE)
+# }
+
+# Initialize renv and restore packages from the lockfile
+# renv::init()
+# renv::restore()
+
+########################################
+## The following sets the python path ##
+########################################
+#library(reticulate)
+#use_python("C:/Python312/python.exe")
+#py_config()
+# reticulate::use_condaenv("NAME_OF_YOUR_ENVIRONMENT")
+
 #############################################
 ## The following loads the needed packages ##
 #############################################
