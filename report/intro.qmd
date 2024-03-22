@@ -7,3 +7,14 @@ source(here::here("scripts/setup.R"))
 * Overview and Motivation
 * Related Work
 * Research questions
+
+# TESTING if R works and if Python works
+```{r}
+print('hello')
+```
+
+```{python}
+# Python code
+import numpy as np
+print(np.mean([10, 20, 30, 40, 50]))
+```
