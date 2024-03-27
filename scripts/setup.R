@@ -39,8 +39,9 @@ packages <- c(
   "here", # for the project's organization
   "tidyverse", # for wrangling
   "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts',# for plotting
-  "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl"
-)
+  "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl", "reactable", 
+  "fpp3", "flextable", 'patchwork', "tseries", "forecast" #TS
+  )
 purrr::walk(packages, function(pkg){
   if (!require(pkg, character.only = TRUE)) {
     install.packages(pkg)
