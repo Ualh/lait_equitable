@@ -74,7 +74,6 @@ correct_city_names = {
     'Vesenaz': 'Vésenaz',  # Correct spelling with accent
     'Yverdon': 'Yverdon-les-Bains'  # Full name for clarity
 }
-
 ```
 
 ```{python}
