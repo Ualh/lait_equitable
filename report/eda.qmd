@@ -74,10 +74,9 @@ correct_city_names = {
     'Vesenaz': 'Vésenaz',  # Correct spelling with accent
     'Yverdon': 'Yverdon-les-Bains'  # Full name for clarity
 }
-```
+df_map['City'] = df_map['City'].apply(lambda x: correct_city_names.get(x, x))
 
-```{python}
-
+df_map['City'].unique()
 ```
 
 ```{python}
