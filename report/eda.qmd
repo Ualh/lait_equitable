@@ -21,8 +21,6 @@ print(os.getcwd())  # In Python
 
 ```{python}
 import pandas as pd
-import os
-
 # Define the path to your xlsb file
 file_path = os.path.join("../data", "Produits laitiers équitables - 2023.xlsb")
 
@@ -52,10 +50,8 @@ column_mapping = {
     'Unnamed: 13': 'Total General'
 }
 
-# Assuming df is your existing DataFrame
 # Rename the columns using the provided mapping
 df.rename(columns=column_mapping, inplace=True)
-
 df.loc[df['Line Labels'] == 'Saint-Gall Webersbleiche', 'Line Labels'] = 'St. Gall'
 data = {
     'City': df['Line Labels'].tolist(),
@@ -65,6 +61,27 @@ data = {
 # Convert the data into a DataFrame
 df_map = pd.DataFrame(data)
 
+#print city names
+df_map['City'].unique()
+
+# Define a mapping of city names from your list to corrected versions
+correct_city_names = {
+    'Bâle': 'Basel',  # French to English/German
+    'Genève': 'Geneva',  # French to English
+    'Bienne': 'Biel/Bienne',  # Official bilingual name
+    'Chavannes': 'Chavannes-de-Bogis',  # Might need specification, common name
+    'Marin': 'Marin-Epagnier',  # Might need specification, common name
+    'Vesenaz': 'Vésenaz',  # Correct spelling with accent
+    'Yverdon': 'Yverdon-les-Bains'  # Full name for clarity
+}
+
+```
+
+```{python}
+
+```
+
+```{python}
 import folium
 from geopy.geocoders import Nominatim
 import time
