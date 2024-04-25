@@ -10,77 +10,26 @@ source(here::here("scripts/setup.R"))
 -   Multivariate visualizations
 -   Summary tables
 
-## Price To Producers Lait Cru
 
 ```{python}
 import os
 print(os.getcwd())  # In Python
-```
-
-### Map
-## All Products
-```{python}
 import pandas as pd
-# Define the path to your xlsb file
-file_path = os.path.join("../data", "Produits laitiers équitables - 2023.xlsb")
-
-# Use pyxlsb to open the file and read it into a pandas dataframe
-# Adjust the sheet name as necessary
-df = pd.read_excel(file_path, engine='pyxlsb', sheet_name='Par SM')
-
-# Remove the first five rows
-df = df.iloc[6:]
-
-#rename columns
-# Define the mapping of old column names to new column names
-column_mapping = {
-    'Quantités vendues - année 2023': 'Line Labels',
-    'Unnamed: 1': '01/01/2023',
-    'Unnamed: 2': '02/01/2023',
-    'Unnamed: 3': '03/01/2023',
-    'Unnamed: 4': '04/01/2023',
-    'Unnamed: 5': '05/01/2023',
-    'Unnamed: 6': '06/01/2023',
-    'Unnamed: 7': '07/01/2023',
-    'Unnamed: 8': '08/01/2023',
-    'Unnamed: 9': '09/01/2023',
-    'Unnamed: 10': '10/01/2023',
-    'Unnamed: 11': '11/01/2023',
-    'Unnamed: 12': '12/01/2023',
-    'Unnamed: 13': 'Total General'
-}
-
-# Rename the columns using the provided mapping
-df.rename(columns=column_mapping, inplace=True)
-df.loc[df['Line Labels'] == 'Saint-Gall Webersbleiche', 'Line Labels'] = 'St. Gall'
-data = {
-    'City': df['Line Labels'].tolist(),
-    'Total General': df['Total General'].tolist()
-}
-
-# Convert the data into a DataFrame
-df_map = pd.DataFrame(data)
-
-#print city names
-df_map['City'].unique()
-
-# Define a mapping of city names from your list to corrected versions
-correct_city_names = {
-    'Bâle': 'Basel',  # French to English/German
-    'Genève': 'Geneva',  # French to English
-    'Bienne': 'Biel/Bienne',  # Official bilingual name
-    'Chavannes': 'Chavannes-de-Bogis',  # Might need specification, common name
-    'Marin': 'Marin-Epagnier',  # Might need specification, common name
-    'Vesenaz': 'Vésenaz',  # Correct spelling with accent
-    'Yverdon': 'Yverdon-les-Bains'  # Full name for clarity
-}
-df_map['City'] = df_map['City'].apply(lambda x: correct_city_names.get(x, x))
-
 import folium
 from geopy.geocoders import Nominatim
 import time
-# Instantiate the geolocator
-geolocator = Nominatim(user_agent="le_stores")
+import pyxlsb
+import branca.colormap as cmp
+import branca
+import numpy as np
+```
+## Lait Equitable Products
+### Map
+```{python}
+# Function to calculate the dynamic radius
+def calculate_radius(volume, max_volume, min_volume, max_radius=20):
+    normalized_volume = (volume - min_volume) / (max_volume - min_volume)
+    return normalized_volume * max_radius + 3
 
 # Function to get latitude and longitude
 def get_lat_lon(city):
@@ -91,107 +40,98 @@ def get_lat_lon(city):
     except AttributeError:
         return None, None
 
-# Apply the function to get latitudes and longitudes
-try:
-    df_map[['Lat', 'Lon']] = df_map.apply(lambda row: pd.Series(get_lat_lon(row['City'])), axis=1)
-    df_map = df_map[:-1]  # Remove the last row as before
-except Exception as e:
-    print(f"An error occurred: {e}")
+# Read data from different product categories
+file_paths = {
+    'All Products': ("../data/Produits laitiers équitables - 2023.xlsb", 'Par SM'),
+    'Milk Drink': ("../data/lait_drink_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Milk Entier': ("../data/lait_entier_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Fondue': ("../data/fondue_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Delice': ("../data/delice_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Creme': ("../data/creme_cafe_sales_per_stores_2023.xlsx", 'Sheet1')
+}
 
-# Function to calculate radius based on sales volume
-def calculate_radius(volume, max_volume, min_volume, max_radius=20):
-    # Normalize the volume to a value between 0 and 1
-    normalized_volume = (volume - min_volume) / (max_volume - min_volume)
-    # Scale the normalized volume to a radius value
-    return normalized_volume * max_radius + 5  # Minimum radius of 5
+# Create a folium map
+m = folium.Map(location=[46.8182, 8.2275], zoom_start=8)
+# Instantiate the geolocator
+geolocator = Nominatim(user_agent="le_stores")
 
-# Create a map centered on the geographic mean of the locations
-m = folium.Map(location=[46.8182, 8.2275], zoom_start=7, tiles='Cartodb Positron', attr='Map data')
+# Loop through each category
+for category, (file_path, sheet_name) in file_paths.items():
+    engine = 'pyxlsb' if 'xlsb' in file_path else None
+    df = pd.read_excel(file_path, engine=engine, sheet_name=sheet_name)
 
-# Add markers with dynamic radius based on the 'Total General' column
-for index, row in df_map.iterrows():
-    if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
-        radius = calculate_radius(row['Total General'], max_sales, min_sales)
-        folium.CircleMarker(
-            location=[row['Lat'], row['Lon']],
-            radius=radius,  # Dynamic radius based on sales volume
-            popup=f"{row['City']}: Total General - {row['Total General']}",
-            color=color_scale(row['Total General']),
-            fill=True,
-            fill_color=color_scale(row['Total General'])
-        ).add_to(m)
+    if category == 'All Products':
+        # Skip the first six rows and rename columns based on the provided structure
+        df = df.iloc[6:]  
+        df.rename(columns={
+            'Quantités vendues - année 2023': 'City',
+            'Unnamed: 1': '01/01/2023',
+            'Unnamed: 2': '02/01/2023',
+            'Unnamed: 3': '03/01/2023',
+            'Unnamed: 4': '04/01/2023',
+            'Unnamed: 5': '05/01/2023',
+            'Unnamed: 6': '06/01/2023',
+            'Unnamed: 7': '07/01/2023',
+            'Unnamed: 8': '08/01/2023',
+            'Unnamed: 9': '09/01/2023',
+            'Unnamed: 10': '10/01/2023',
+            'Unnamed: 11': '11/01/2023',
+            'Unnamed: 12': '12/01/2023',
+            'Unnamed: 13': 'Total General'
+        }, inplace=True)
+    else:
+        # Renaming columns for XLSX files based on your last dataframe example
+        df.rename(columns={
+            df.columns[0]: 'City',
+            df.columns[-1]: 'Total General'
+        }, inplace=True)
 
-# Add the color scale legend to the map
-m.add_child(color_scale)
+    # Standardize city names
+    correct_city_names = {
+        'Bâle': 'Basel',
+        'Genève': 'Geneva',
+        'Bienne': 'Biel/Bienne',
+        'Chavannes': 'Chavannes-de-Bogis',
+        'Marin': 'Marin-Epagnier',
+        'Vesenaz': 'Vésenaz',
+        'Yverdon': 'Yverdon-les-Bains',
+        'Saint-Gall Webersbleiche': 'St. Gall'
+    }
+    df['City'] = df['City'].apply(lambda x: correct_city_names.get(x, x))
+
+    # Get latitudes and longitudes
+    df[['Lat', 'Lon']] = df.apply(lambda row: pd.Series(get_lat_lon(row['City'])), axis=1)
+
+    # Define color scale and feature group
+    max_sales = df['Total General'].max()
+    min_sales = df['Total General'].min()
+    color_scale = cmp.linear.viridis.scale(min_sales, max_sales)
+    fg = folium.FeatureGroup(name=category)
+    
+    # Add markers
+    for index, row in df.iterrows():
+        if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
+            radius = calculate_radius(row['Total General'], max_sales, min_sales)
+            folium.CircleMarker(
+                location=[row['Lat'], row['Lon']],
+                radius=radius,
+                popup=f"{row['City']}: {row['Total General']}",
+                color=color_scale(row['Total General']),
+                fill=True,
+                fill_color=color_scale(row['Total General'])
+            ).add_to(fg)
+
+    fg.add_to(m)
+
+# Add layer control and save the map
+folium.LayerControl().add_to(m)
+m.save('combined_product_map.html')
 m
 ```
 
-## Milk
-```{python}
-import pandas as pd
-#get current working directory
-print(os.getcwd())  # In Python
 
-# read lait_drink_sales_per_stores_2023.csv
-df2 = pd.read_csv('../data/lait_drink_sales_per_stores_2023.csv')
-
-# Convert the df2 into a DataFrame
-data = {
-    'City': df2['Row Labels'].tolist(),
-    'Total General': df2['Grand Total'].tolist()
-}
-
-df_map = pd.DataFrame(data)
-
-# Define a mapping of city names from your list to corrected versions
-correct_city_names = {
-    'Bâle': 'Basel',  # French to English/German
-    'Genève': 'Geneva',  # French to English
-    'Bienne': 'Biel/Bienne',  # Official bilingual name
-    'Chavannes': 'Chavannes-de-Bogis',  # Might need specification, common name
-    'Marin': 'Marin-Epagnier',  # Might need specification, common name
-    'Vesenaz': 'Vésenaz',  # Correct spelling with accent
-    'Yverdon': 'Yverdon-les-Bains', # Full name for clarity
-    'Saint-Gall Webersbleiche' : 'St. Gall'
-}
-df_map['City'] = df_map['City'].apply(lambda x: correct_city_names.get(x, x))
-```
-
-```{python}
-# Apply the function to get latitudes and longitudes
-try:
-    df_map[['Lat', 'Lon']] = df_map.apply(lambda row: pd.Series(get_lat_lon(row['City'])), axis=1)
-    df_map = df_map[:-1]  # Remove the last row as before
-except Exception as e:
-    print(f"An error occurred: {e}")
-
-max_sales = df_map['Total General'].max()
-min_sales = df_map['Total General'].min()
-color_scale = cmp.linear.viridis.scale(min_sales, max_sales)
-
-# Create a map centered on the geographic mean of the locations
-m = folium.Map(location=[46.8182, 8.2275], zoom_start=7, tiles='Cartodb Positron', attr='Map data')
-
-# Add markers with dynamic radius based on the 'Total General' column
-for index, row in df_map.iterrows():
-    if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
-        radius = calculate_radius(row['Total General'], max_sales, min_sales)
-        folium.CircleMarker(
-            location=[row['Lat'], row['Lon']],
-            radius=radius,  # Dynamic radius based on sales volume
-            popup=f"{row['City']}: Total General - {row['Total General']}",
-            color=color_scale(row['Total General']),
-            fill=True,
-            fill_color=color_scale(row['Total General'])
-        ).add_to(m)
-
-# Add the color scale legend to the map
-m.add_child(color_scale)
-```
-
-
+## Price To Producers Lait Cru
 ### Organic Milk vs Non Organic (bio) Milk
-
 ```{r}
 # Create xts object
 prices_xts <- xts(df_producteur[, c("prix_bio", "prix_non_bio")], order.by = df_producteur$date)
@@ -218,7 +158,6 @@ p_delta
 ```
 
 ### Seasonality
-
 ```{r}
 # Process the data to extract month and year
 df_producteur <- df_producteur %>%
@@ -249,8 +188,8 @@ interactive_plot_seaso_2 <- interactive_plot_seaso_2 %>%
 interactive_plot_seaso_2
 ```
 
+## Forecast
 ### ARIMA Model
-
 ```{r, echo = FALSE, message = FALSE}
 library(fpp3)
 library(tsibbledata)
@@ -348,7 +287,6 @@ forecast_table %>%
 ```
 
 ### Exponential Smoothing
-
 ```{r}
 # Fit the ETS model
 fit_non_bio_ets <- ets(df_producteur_ts_non_bio)
