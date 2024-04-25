@@ -1,0 +1,347 @@
+# Exploratory data analysis
+
+```{r, echo = FALSE, message = FALSE}
+source(here::here("scripts/setup.R"))
+```
+
+-   Mapping out the underlying structure
+-   Identifying the most important variables
+-   Univariate visualizations
+-   Multivariate visualizations
+-   Summary tables
+
+
+```{python}
+import os
+print(os.getcwd())  # In Python
+import pandas as pd
+import folium
+from geopy.geocoders import Nominatim
+import time
+import pyxlsb
+import branca.colormap as cmp
+import branca
+import numpy as np
+```
+## Lait Equitable Products
+### Map
+```{python}
+# Function to calculate the dynamic radius
+def calculate_radius(volume, max_volume, min_volume, max_radius=20):
+    normalized_volume = (volume - min_volume) / (max_volume - min_volume)
+    return normalized_volume * max_radius + 3
+
+# Function to get latitude and longitude
+def get_lat_lon(city):
+    try:
+        time.sleep(1)  # Simple rate-limiting mechanism
+        location = geolocator.geocode(city + ', Switzerland')
+        return location.latitude, location.longitude
+    except AttributeError:
+        return None, None
+
+# Read data from different product categories
+file_paths = {
+    'All Products': ("../data/Produits laitiers équitables - 2023.xlsb", 'Par SM'),
+    'Milk Drink': ("../data/lait_drink_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Milk Entier': ("../data/lait_entier_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Fondue': ("../data/fondue_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Delice': ("../data/delice_sales_per_stores_2023.xlsx", 'Sheet1'),
+    'Creme': ("../data/creme_cafe_sales_per_stores_2023.xlsx", 'Sheet1')
+}
+
+# Create a folium map
+m = folium.Map(location=[46.8182, 8.2275], zoom_start=8)
+# Instantiate the geolocator
+geolocator = Nominatim(user_agent="le_stores")
+
+# Loop through each category
+for category, (file_path, sheet_name) in file_paths.items():
+    engine = 'pyxlsb' if 'xlsb' in file_path else None
+    df = pd.read_excel(file_path, engine=engine, sheet_name=sheet_name)
+
+    if category == 'All Products':
+        # Skip the first six rows and rename columns based on the provided structure
+        df = df.iloc[6:]  
+        df.rename(columns={
+            'Quantités vendues - année 2023': 'City',
+            'Unnamed: 1': '01/01/2023',
+            'Unnamed: 2': '02/01/2023',
+            'Unnamed: 3': '03/01/2023',
+            'Unnamed: 4': '04/01/2023',
+            'Unnamed: 5': '05/01/2023',
+            'Unnamed: 6': '06/01/2023',
+            'Unnamed: 7': '07/01/2023',
+            'Unnamed: 8': '08/01/2023',
+            'Unnamed: 9': '09/01/2023',
+            'Unnamed: 10': '10/01/2023',
+            'Unnamed: 11': '11/01/2023',
+            'Unnamed: 12': '12/01/2023',
+            'Unnamed: 13': 'Total General'
+        }, inplace=True)
+    else:
+        # Renaming columns for XLSX files based on your last dataframe example
+        df.rename(columns={
+            df.columns[0]: 'City',
+            df.columns[-1]: 'Total General'
+        }, inplace=True)
+
+    # Standardize city names
+    correct_city_names = {
+        'Bâle': 'Basel',
+        'Genève': 'Geneva',
+        'Bienne': 'Biel/Bienne',
+        'Chavannes': 'Chavannes-de-Bogis',
+        'Marin': 'Marin-Epagnier',
+        'Vesenaz': 'Vésenaz',
+        'Yverdon': 'Yverdon-les-Bains',
+        'Saint-Gall Webersbleiche': 'St. Gall'
+    }
+    df['City'] = df['City'].apply(lambda x: correct_city_names.get(x, x))
+
+    # Get latitudes and longitudes
+    df[['Lat', 'Lon']] = df.apply(lambda row: pd.Series(get_lat_lon(row['City'])), axis=1)
+
+    # Define color scale and feature group
+    max_sales = df['Total General'].max()
+    min_sales = df['Total General'].min()
+    color_scale = cmp.linear.viridis.scale(min_sales, max_sales)
+    fg = folium.FeatureGroup(name=category)
+    
+    # Add markers
+    for index, row in df.iterrows():
+        if pd.notnull(row['Lat']) and pd.notnull(row['Lon']):
+            radius = calculate_radius(row['Total General'], max_sales, min_sales)
+            folium.CircleMarker(
+                location=[row['Lat'], row['Lon']],
+                radius=radius,
+                popup=f"{row['City']}: {row['Total General']}",
+                color=color_scale(row['Total General']),
+                fill=True,
+                fill_color=color_scale(row['Total General'])
+            ).add_to(fg)
+
+    fg.add_to(m)
+
+# Add layer control and save the map
+folium.LayerControl().add_to(m)
+m.save('combined_product_map.html')
+m
+```
+
+
+## Price To Producers Lait Cru
+### Organic Milk vs Non Organic (bio) Milk
+```{r}
+# Create xts object
+prices_xts <- xts(df_producteur[, c("prix_bio", "prix_non_bio")], order.by = df_producteur$date)
+
+# Plot using dygraphs
+dygraph(prices_xts, main = "Trends in Milk Prices (Organic vs. Non-Organic)", width = "600px", height = "400px") %>%
+  dySeries("prix_bio", label = "Organic Price", color = "#24918d") %>%
+  dySeries("prix_non_bio", label = "Non-Organic Price", color = "#7e57c2") %>%
+  dyOptions(stackedGraph = FALSE) %>%
+  dyRangeSelector(height = 20)
+
+
+# Create an xts object for the delta series, ensuring the series name is retained
+delta_xts <- xts(x = df_producteur[,"delta", drop = FALSE], order.by = df_producteur$date)
+
+# Plot using dygraphsdf_
+p_delta <- dygraph(delta_xts, main = "Difference in Prices Between Organic and Non-Organic Milk Over Time", width = "600px", height = "400px") %>%
+  dySeries("delta", label = "Delta in Price", color = "#24918d") %>%
+  dyOptions(stackedGraph = FALSE) %>%
+  dyRangeSelector(height = 20)
+
+# Print the dygraph to display it
+p_delta
+```
+
+### Seasonality
+```{r}
+# Process the data to extract month and year
+df_producteur <- df_producteur %>%
+  mutate(Month = format(date, "%m"),
+         Year = format(date, "%Y")) %>%
+  arrange(date) # Ensure data is in chronological order
+
+# Plotting the data with ggplot2, showing the trend within each year
+p_seaso_2 <- ggplot(df_producteur, aes(x = Month, y = prix_bio, group = Year, color = as.factor(Year))) +
+  geom_smooth(se = FALSE, method = "loess", span = 0.3, size = 0.7) +
+  labs(title = "Monthly Milk Prices by Year",
+       x = "Month",
+       y = "Price of Organic Milk",
+       color = "Year") +
+  theme_minimal() +
+  scale_color_viridis_d() +
+  theme(legend.position = "bottom", axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Convert to an interactive plotly object
+interactive_plot_seaso_2 <- ggplotly(p_seaso_2, width = 600, height = 400)
+
+# Adjust plotly settings 
+interactive_plot_seaso_2 <- interactive_plot_seaso_2 %>%
+  layout(margin = list(l = 40, r = 10, b = 40, t = 40), # Adjust margins
+         legend = list(orientation = "h", x = 0, xanchor = "left", y = -0.2)) # Adjust legend position
+
+# Display the interactive plot
+interactive_plot_seaso_2
+```
+
+## Forecast
+### ARIMA Model
+```{r, echo = FALSE, message = FALSE}
+library(fpp3)
+library(tsibbledata)
+library(flextable)
+library(readxl)
+library(patchwork)
+library(tseries)
+library(forecast)
+```
+
+```{r}
+# re-arragen the df_producteur data in ascending order
+df_producteur <- df_producteur[order(df_producteur$date),]
+
+#creating tsibble for organic and non-organic milk prices
+df_producteur_ts_non_bio <- ts(df_producteur$prix_non_bio, start=c(2017, 12), frequency=12)
+df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=12)
+
+#plot the two time series side by side
+autoplot(df_producteur_ts_non_bio)
+autoplot(df_producteur_ts_bio) + labs(title = "Time Series of Organic Milk Prices")
+
+#check for stationarity
+adf.test(df_producteur_ts_non_bio)
+adf.test(df_producteur_ts_bio)
+```
+
+We can reject Stationarity because p-value is too great (0.08)
+```{r}
+#difference the time series
+df_producteur_ts_non_bio_diff <- diff(df_producteur_ts_non_bio)
+df_producteur_ts_bio_diff <- diff(df_producteur_ts_bio)
+
+#plot them to see the differentiation
+autoplot(df_producteur_ts_non_bio_diff)+ labs(title = "Differenced Time Series of Organic Milk Prices")
+autoplot(df_producteur_ts_bio_diff) + labs(title = "Differenced Time Series of Bio Milk Prices")
+
+#check for stationarity
+adf.test(df_producteur_ts_non_bio_diff)
+adf.test(df_producteur_ts_bio_diff)
+```
+
+The test reveal a p-value of 0.01 for both series, which is not less than 0.01, so we cannot reject the null hypothesis of stationarity.
+
+```{r}
+# we still observe strong seasonality therefore we will difference the series again but this time with seasonal difference
+df_producteur_ts_non_bio_diff_seas <- diff(df_producteur_ts_non_bio_diff, lag = 12)
+df_producteur_ts_bio_diff_seas <- diff(df_producteur_ts_bio_diff, lag = 12)
+
+#plot them to see the differentiation
+autoplot(df_producteur_ts_non_bio_diff_seas) + labs(title = "Seasonal Differenced Time Series of Organic Milk Prices")
+autoplot(df_producteur_ts_bio_diff_seas) + labs(title = "Seasonal Differenced Time Series of Bio Milk Prices")
+
+# test for stationarity
+adf.test(df_producteur_ts_non_bio_diff_seas)
+adf.test(df_producteur_ts_bio_diff_seas)
+```
+```{r}
+# Fit the ARIMA model
+fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = TRUE)
+fit_bio <- auto.arima(df_producteur_ts_bio, seasonal = TRUE)
+
+# Forecast the next 12 months
+forecast_non_bio <- forecast(fit_non_bio, h = 12)
+forecast_bio <- forecast(fit_bio, h = 12)
+
+#show the components used for the ARIMA model
+fit_non_bio %>% summary()
+fit_bio %>% summary()
+
+#plot the forecasted values
+autoplot(forecast_non_bio) + labs(title = "Forecasted Prices of Non-Organic Milk")
+autoplot(forecast_bio) + labs(title = "Forecasted Prices of Organic Milk")
+```
+
+```{r}
+# Create a table of the forecasted values
+forecast_table <- tibble(
+  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
+  Non_Organic_Forecast = forecast_non_bio$mean,
+  Bio_Forecast = forecast_bio$mean
+)
+forecast_table
+
+#plot the forecasted values
+forecast_table %>%
+  pivot_longer(cols = c(Non_Organic_Forecast, Bio_Forecast), names_to = "Type", values_to = "Forecasted_Price") %>%
+  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
+  geom_line() +
+  labs(title = "Forecasted Prices of Organic and Non-Organic Milk",
+       x = "Month",
+       y = "Price",
+       color = "Type") +
+  theme_minimal()
+```
+
+### Exponential Smoothing
+```{r}
+# Fit the ETS model
+fit_non_bio_ets <- ets(df_producteur_ts_non_bio)
+fit_bio_ets <- ets(df_producteur_ts_bio)
+
+# Forecast the next 12 months
+forecast_non_bio_ets <- forecast(fit_non_bio_ets, h = 12)
+forecast_bio_ets <- forecast(fit_bio_ets, h = 12)
+
+#plot the forecasted values
+autoplot(forecast_non_bio_ets) + labs(title = "Forecasted Prices of Non-Organic Milk (ETS)")
+autoplot(forecast_bio_ets) + labs(title = "Forecasted Prices of Organic Milk (ETS)")
+```
+
+```{r}
+# Create a table of the forecasted values
+forecast_table_ets <- tibble(
+  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
+  Non_Organic_Forecast_ETS = forecast_non_bio_ets$mean,
+  Bio_Forecast_ETS = forecast_bio_ets$mean
+)
+forecast_table_ets
+
+#plot the forecasted values
+forecast_table_ets %>%
+  pivot_longer(cols = c(Non_Organic_Forecast_ETS, Bio_Forecast_ETS), names_to = "Type", values_to = "Forecasted_Price") %>%
+  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
+  geom_line() +
+  labs(title = "Forecasted Prices of Organic and Non-Organic Milk (ETS)",
+       x = "Month",
+       y = "Price",
+       color = "Type") +
+  theme_minimal()
+```
+```{r}
+# compare ARIMA and ETS forecast
+forecast_table %>%
+  left_join(forecast_table_ets, by = "Month") %>%
+  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
+         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS)
+
+#plot the difference
+forecast_table %>%
+  left_join(forecast_table_ets, by = "Month") %>%
+  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
+         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS) %>%
+  pivot_longer(cols = c(Diff_Non_Organic, Diff_Bio), names_to = "Type", values_to = "Difference") %>%
+  ggplot(aes(x = Month, y = Difference, color = Type)) +
+  geom_line() +
+  labs(title = "Difference in Forecasted Prices of Organic and Non-Organic Milk",
+       x = "Month",
+       y = "Difference",
+       color = "Type") +
+  theme_minimal()
+
+```
+
+
