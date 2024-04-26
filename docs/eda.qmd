@@ -10,7 +10,6 @@ source(here::here("scripts/setup.R"))
 -   Multivariate visualizations
 -   Summary tables
 
-
 ```{python}
 import os
 print(os.getcwd())  # In Python
@@ -22,9 +21,102 @@ import pyxlsb
 import branca.colormap as cmp
 import branca
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 ```
+
 ## Lait Equitable Products
+### Sales Distribution Accross Locations
+
+```{python}
+# Setting up visualization styles
+sns.set_theme(style="whitegrid")
+
+# Monthly sales distribution across all locations
+monthly_sales = df.set_index('Row Labels').iloc[:, :-1]  # Exclude the Grand Total for monthly trends
+
+# Plotting the total sales per location
+plt.figure(figsize=(14, 7))
+sns.barplot(data=monthly_sales.transpose(), estimator=sum, ci=None)
+plt.title('Total Sales by Month Across All Locations (2023)')
+plt.xlabel('Month')
+plt.ylabel('Total Sales')
+plt.xticks(rotation=45)
+plt.show()
+
+# Boxplot to visualize distribution of total sales across all locations
+plt.figure(figsize=(14, 7))
+sns.boxplot(data=monthly_sales, orient='h')
+plt.title('Distribution of Sales Across Locations')
+plt.xlabel('Sales')
+plt.ylabel('Locations')
+plt.show()
+```
+
+Total Sales by Month Across All Locations (2023):
+The first chart displays the total sales for each month across all Manor locations. This provides an insight into any seasonal trends or fluctuations in sales volume throughout the year.
+
+Distribution of Sales Across Locations:
+The second chart, a boxplot, illustrates the distribution of sales across different locations. It highlights the variability and range of sales figures, indicating which locations might be underperforming or outperforming.
+
+From the initial look, it seems there are noticeable variations in sales performance across different months and locations, which could be influenced by factors such as seasonal demand, marketing efforts, or local economic conditions.
+
+### Top Performing /  Worse Performing Locations
+
+```{python}
+# Adding a 'Total Sales' column to the dataframe for easier analysis of total sales per location
+df['Total Sales'] = df.iloc[:, 1:-1].sum(axis=1)
+
+# Sorting the data by total sales to identify top and bottom locations
+top_locations = df.sort_values(by='Total Sales', ascending=False).head(5)
+bottom_locations = df.sort_values(by='Total Sales', ascending=True).head(5)
+
+# Plotting top and bottom performing locations
+plt.figure(figsize=(14, 7))
+sns.barplot(x='Total Sales', y='Row Labels', data=top_locations, palette='viridis')
+plt.title('Top Performing Locations by Total Sales')
+plt.xlabel('Total Sales')
+plt.ylabel('Locations')
+plt.show()
+
+plt.figure(figsize=(14, 7))
+sns.barplot(x='Total Sales', y='Row Labels', data=bottom_locations, palette='magma')
+plt.title('Bottom Performing Locations by Total Sales')
+plt.xlabel('Total Sales')
+plt.ylabel('Locations')
+plt.show()
+```
+
+### 2022 vs 2023
+
+```{python}
+# Setting up the bar chart for Year-over-Year comparison
+plt.figure(figsize=(14, 8))
+width = 0.35  # the width of the bars
+
+locations = merged_sales_data['Location']
+index = range(len(locations))
+sales_2022 = merged_sales_data['Total Sales 2022']
+sales_2023 = merged_sales_data['Total Sales 2023']
+
+bars1 = plt.bar(index, sales_2022, width, label='2022')
+bars2 = plt.bar([p + width for p in index], sales_2023, width, label='2023')
+
+plt.xlabel('Location')
+plt.ylabel('Total Sales')
+plt.title('Year-over-Year Sales Comparison by Location')
+plt.xticks([p + width / 2 for p in index], locations, rotation=90)
+plt.legend()
+
+plt.show()
+```
+
+- Trend of Decline: A significant number of Manor locations have lower sales figures in 2023 compared to 2022. This trend suggests that Lait Equitable might be facing challenges in these areas, which could include increased competition, changing consumer preferences, or other market dynamics affecting the demand for their products.
+
+- Monthey's Decline: The bar chart shows that Monthey experienced a substantial decrease in sales in 2023 compared to 2022. This would be a key point of concern for Lait Equitable, and understanding why Monthey is underperforming is essential. This could be due to a range of factors, such as local economic conditions, operational challenges, increased competition, or changes in consumer preference within that particular area.
+
 ### Map
+
 ```{python}
 # Function to calculate the dynamic radius
 def calculate_radius(volume, max_volume, min_volume, max_radius=20):
@@ -129,9 +221,10 @@ m.save('combined_product_map.html')
 m
 ```
 
-
 ## Price To Producers Lait Cru
+
 ### Organic Milk vs Non Organic (bio) Milk
+
 ```{r}
 # Create xts object
 prices_xts <- xts(df_producteur[, c("prix_bio", "prix_non_bio")], order.by = df_producteur$date)
@@ -158,6 +251,7 @@ p_delta
 ```
 
 ### Seasonality
+
 ```{r}
 # Process the data to extract month and year
 df_producteur <- df_producteur %>%
@@ -189,7 +283,9 @@ interactive_plot_seaso_2
 ```
 
 ## Forecast
+
 ### ARIMA Model
+
 ```{r, echo = FALSE, message = FALSE}
 library(fpp3)
 library(tsibbledata)
@@ -218,6 +314,7 @@ adf.test(df_producteur_ts_bio)
 ```
 
 We can reject Stationarity because p-value is too great (0.08)
+
 ```{r}
 #difference the time series
 df_producteur_ts_non_bio_diff <- diff(df_producteur_ts_non_bio)
@@ -247,6 +344,7 @@ autoplot(df_producteur_ts_bio_diff_seas) + labs(title = "Seasonal Differenced Ti
 adf.test(df_producteur_ts_non_bio_diff_seas)
 adf.test(df_producteur_ts_bio_diff_seas)
 ```
+
 ```{r}
 # Fit the ARIMA model
 fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = TRUE)
@@ -287,6 +385,7 @@ forecast_table %>%
 ```
 
 ### Exponential Smoothing
+
 ```{r}
 # Fit the ETS model
 fit_non_bio_ets <- ets(df_producteur_ts_non_bio)
@@ -321,6 +420,7 @@ forecast_table_ets %>%
        color = "Type") +
   theme_minimal()
 ```
+
 ```{r}
 # compare ARIMA and ETS forecast
 forecast_table %>%
@@ -343,5 +443,3 @@ forecast_table %>%
   theme_minimal()
 
 ```
-
-

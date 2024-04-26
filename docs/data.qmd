@@ -10,6 +10,123 @@ source(here::here("scripts/setup.R"))
 * Spotting mistakes and missing data (could be part of EDA too)
 * Listing anomalies and outliers (could be part of EDA too)
 
+## Lait Equitable Datasets
+```{python}
+import os
+print(os.getcwd())  # In Python, the current working directory can be checked using the os module
+import pandas as pd
+```
+
+### Dataset Sales 2023
+```{python}
+file_path = '../data/all_products_sales_per_stores_2023.xlsx'
+df = pd.read_excel(file_path, sheet_name='Sheet1')
+
+df.columns = df.columns.astype(str)
+# Renaming the monthly columns for easier readability
+new_column_names = {
+    '2023-01-01 00:00:00': 'Jan 2023',
+    '2023-02-01 00:00:00': 'Feb 2023',
+    '2023-03-01 00:00:00': 'Mar 2023',
+    '2023-04-01 00:00:00': 'Apr 2023',
+    '2023-05-01 00:00:00': 'May 2023',
+    '2023-06-01 00:00:00': 'Jun 2023',
+    '2023-07-01 00:00:00': 'Jul 2023',
+    '2023-08-01 00:00:00': 'Aug 2023',
+    '2023-09-01 00:00:00': 'Sep 2023',
+    '2023-10-01 00:00:00': 'Oct 2023',
+    '2023-11-01 00:00:00': 'Nov 2023',
+    '2023-12-01 00:00:00': 'Dec 2023'
+}
+df.rename(columns=new_column_names, inplace=True)
+
+# Standardize city names based on the mapping provided
+correct_city_names = {
+    'Bâle': 'Basel',
+    'Genève': 'Geneva',
+    'Bienne': 'Biel/Bienne',
+    'Chavannes': 'Chavannes-de-Bogis',
+    'Marin': 'Marin-Epagnier',
+    'Vesenaz': 'Vésenaz',
+    'Yverdon': 'Yverdon-les-Bains',
+    'Saint-Gall Webersbleiche': 'St. Gall'
+}
+df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x))
+
+# Display the cleaned dataset
+df.head()
+```
+
+The dataset contains monthly sales data from different Manor store locations for the year 2023. 
+
+Here's an overview of the dataset structure and the initial rows:
+
+- Columns
+Row Labels: Store location names (city or specific store name).
+Monthly Columns (2023-01-01 to 2023-12-01): Each column represents sales figures for a specific month of 2023.
+Grand Total: Total sales across all months of 2023 for each location.
+
+- Data Types
+The 'Row Labels' column is of type object (string), which lists the locations.
+Monthly sales data from January to August are integers, and from September to December, they are floats.
+'Grand Total' is also a float, representing the sum of monthly sales.
+
+### Dataset Sales 2022
+```{python}
+# Load the data for 2022
+file_path_2022 = '../data/sales_2022.xlsx'
+df_2022 = pd.read_excel(file_path_2022)
+
+# Standardize city names based on the provided mapping
+city_name_mapping = {
+    'Bâle': 'Basel',
+    'Genève': 'Geneva',
+    'Bienne': 'Biel/Bienne',
+    'Chavannes': 'Chavannes-de-Bogis',
+    'Marin': 'Marin-Epagnier',
+    'Vesenaz': 'Vésenaz',
+    'Yverdon': 'Yverdon-les-Bains',
+    'Saint-Gall Webersbleiche': 'St. Gall'
+}
+
+# Rename columns to standardize city names
+df_2022.rename(columns=city_name_mapping, inplace=True)
+
+# Pivoting the table to get total sales per location for 2022, summing across all products
+sales_columns_2022 = [col for col in df_2022.columns if col not in ['Code article', 'Description article', 'Marque', 'Code Fournisseur', 'Description Fournisseur']]
+df_2022_total_sales = df_2022[sales_columns_2022].sum().reset_index()
+df_2022_total_sales.columns = ['Location', 'Total Sales 2022']
+
+# Display the adjusted DataFrame for total sales per location for 2022
+df_2022_total_sales.head()
+```
+
+The 2022 dataset has a different structure from the 2023 data. It consists of multiple products and their sales across various locations, with the following key columns:
+
+- Code article: Unique identifier for each product.
+- Description article: Descriptive name of the product.
+- Marque: Brand of the product.
+- Code Fournisseur: Supplier code.
+- Description Fournisseur: Supplier name.
+- Location Columns (e.g., Ascona-Delta, Baden, Bâle, etc.): Each of these columns represents sales figures for that specific location.
+
+#### Merging 2022 and 2023 dataset
+```{python}
+# Extracting the total sales for 2023 from the first dataset
+df_2023_total_sales = df[['Row Labels', 'Grand Total']].rename(columns={'Row Labels': 'Location', 'Grand Total': 'Total Sales 2023'})
+
+# Merging the 2022 and 2023 datasets on Location
+merged_sales_data = pd.merge(df_2022_total_sales, df_2023_total_sales, on='Location', how='outer')
+
+# Filling any NaN values that might have occurred due to locations present in one dataset and not the other
+merged_sales_data.fillna(0, inplace=True)
+
+# Display the merged dataset with total sales for both years
+merged_sales_data.head()
+```
+The 2022 sales data has been aggregated and standardized for each location.
+The merged dataset now shows the total sales per location for both 2022 and 2023:
+### 
 ## Producteur Points of View
 
 ### Load datasets
