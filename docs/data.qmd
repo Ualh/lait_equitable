@@ -10,7 +10,89 @@ source(here::here("scripts/setup.R"))
 * Spotting mistakes and missing data (could be part of EDA too)
 * Listing anomalies and outliers (could be part of EDA too)
 
-## Lait Equitable Datasets
+## Swiss Producer
+### Load datasets
+```{r}
+library(data.table)
+
+file_path <- "../data/"
+
+#df_producteur <- fread(paste0(file_path, "Producteur_lait_Donnes_17_03_2024 15_57_31.csv"))
+
+df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
+```
+
+### Df producteur Lait Cru Description
+```{r}
+df_producteur$date <- as.Date(df_producteur$date)
+ library(kableExtra)
+# Create a tibble with variable descriptions for df_producteur
+variable_table <- tibble(
+  Variable = c("Date", "prix_bio", "prix_non_bio", "delta", "Delta_pourcent"),
+  Description = c(
+    "The date when the prices were recorded, in a year-month-day format.",
+    "The recorded price of organic milk on the given date.",
+    "The recorded price of non-organic milk on the given date.",
+    "The absolute difference between the organic and non-organic milk prices.",
+    "The percentage difference between the organic and non-organic milk prices."
+  )
+)
+
+# Display the table using kableExtra
+variable_table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+
+```
+```{r}
+# create a new data cleaned
+df_producteur_show <- df_producteur %>%
+  mutate(delta = prix_bio - prix_non_bio,
+         delta_pourcent = (prix_bio - prix_non_bio) / prix_non_bio * 100) %>%
+  select(date, prix_bio, prix_non_bio, delta, delta_pourcent) %>%
+  #round all column  to 2 decimal places
+  mutate_if(is.numeric, round, 2) 
+
+#print max and min values for delta_pourcent
+# max_delta_pourcent <- max(df_producteur_show$delta_pourcent, na.rm = TRUE)
+# max_delta_pourcent
+# min_delta_pourcent <- min(df_producteur_show$delta_pourcent, na.rm = TRUE)
+# min_delta_pourcent
+
+#display cleaned data using reactable
+library(reactable)
+reactable(
+  df_producteur_show,  
+  columns = list(
+    date = colDef(
+      align = "center",  # Center align the date column
+      minWidth = 150
+    ),
+    delta_pourcent = colDef(
+      align = "right",  # Right align the price column
+      style = function(value) {
+        # Apply conditional formatting based on the price value
+        if (value < 15) {
+          color <- "green"  # Green for high prices
+        } else if (value > 30) {
+          color <- "red"    # Red for low prices
+        } else {
+          color <- "black"  # Default color for other values
+        }
+        list(color = color)
+      }
+    )
+  ),
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
+## Lait Equitable Sales 
 ```{python}
 import os
 print(os.getcwd())  # In Python, the current working directory can be checked using the os module
@@ -127,88 +209,8 @@ merged_sales_data.head()
 The 2022 sales data has been aggregated and standardized for each location.
 The merged dataset now shows the total sales per location for both 2022 and 2023:
 ### 
-## Producteur Points of View
 
-### Load datasets
-```{r}
-library(data.table)
 
-file_path <- "../data/"
-
-#df_producteur <- fread(paste0(file_path, "Producteur_lait_Donnes_17_03_2024 15_57_31.csv"))
-
-df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
-```
-
-### Df producteur Lait Cru Description
-```{r}
-df_producteur$date <- as.Date(df_producteur$date)
- library(kableExtra)
-# Create a tibble with variable descriptions for df_producteur
-variable_table <- tibble(
-  Variable = c("Date", "prix_bio", "prix_non_bio", "delta", "Delta_pourcent"),
-  Description = c(
-    "The date when the prices were recorded, in a year-month-day format.",
-    "The recorded price of organic milk on the given date.",
-    "The recorded price of non-organic milk on the given date.",
-    "The absolute difference between the organic and non-organic milk prices.",
-    "The percentage difference between the organic and non-organic milk prices."
-  )
-)
-
-# Display the table using kableExtra
-variable_table %>%
-  kbl() %>%
-  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
-
-```
-```{r}
-# create a new data cleaned
-df_producteur_show <- df_producteur %>%
-  mutate(delta = prix_bio - prix_non_bio,
-         delta_pourcent = (prix_bio - prix_non_bio) / prix_non_bio * 100) %>%
-  select(date, prix_bio, prix_non_bio, delta, delta_pourcent) %>%
-  #round all column  to 2 decimal places
-  mutate_if(is.numeric, round, 2) 
-
-#print max and min values for delta_pourcent
-# max_delta_pourcent <- max(df_producteur_show$delta_pourcent, na.rm = TRUE)
-# max_delta_pourcent
-# min_delta_pourcent <- min(df_producteur_show$delta_pourcent, na.rm = TRUE)
-# min_delta_pourcent
-
-#display cleaned data using reactable
-library(reactable)
-reactable(
-  df_producteur_show,  
-  columns = list(
-    date = colDef(
-      align = "center",  # Center align the date column
-      minWidth = 150
-    ),
-    delta_pourcent = colDef(
-      align = "right",  # Right align the price column
-      style = function(value) {
-        # Apply conditional formatting based on the price value
-        if (value < 15) {
-          color <- "green"  # Green for high prices
-        } else if (value > 30) {
-          color <- "red"    # Red for low prices
-        } else {
-          color <- "black"  # Default color for other values
-        }
-        list(color = color)
-      }
-    )
-  ),
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
-```
 
 
 
