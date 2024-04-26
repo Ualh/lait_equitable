@@ -35,6 +35,7 @@ import seaborn as sns
 ```
 
 ## Lait Equitable Products
+
 ### Sales Distribution Accross Locations
 
 ```{python}
@@ -62,15 +63,13 @@ plt.ylabel('Locations')
 plt.show()
 ```
 
-Total Sales by Month Across All Locations (2023):
-The first chart displays the total sales for each month across all Manor locations. This provides an insight into any seasonal trends or fluctuations in sales volume throughout the year.
+Total Sales by Month Across All Locations (2023): The first chart displays the total sales for each month across all Manor locations. This provides an insight into any seasonal trends or fluctuations in sales volume throughout the year.
 
-Distribution of Sales Across Locations:
-The second chart, a boxplot, illustrates the distribution of sales across different locations. It highlights the variability and range of sales figures, indicating which locations might be underperforming or outperforming.
+Distribution of Sales Across Locations: The second chart, a boxplot, illustrates the distribution of sales across different locations. It highlights the variability and range of sales figures, indicating which locations might be underperforming or outperforming.
 
 From the initial look, it seems there are noticeable variations in sales performance across different months and locations, which could be influenced by factors such as seasonal demand, marketing efforts, or local economic conditions.
 
-### Top Performing /  Worse Performing Locations
+### Top Performing / Worse Performing Locations
 
 ```{python, fig.height=14, fig.width=7, dpi=300}
 # Adding a 'Total Sales' column to the dataframe for easier analysis of total sales per location
@@ -120,9 +119,9 @@ plt.legend()
 plt.show()
 ```
 
-- Trend of Decline: A significant number of Manor locations have lower sales figures in 2023 compared to 2022. This trend suggests that Lait Equitable might be facing challenges in these areas, which could include increased competition, changing consumer preferences, or other market dynamics affecting the demand for their products.
+-   Trend of Decline: A significant number of Manor locations have lower sales figures in 2023 compared to 2022. This trend suggests that Lait Equitable might be facing challenges in these areas, which could include increased competition, changing consumer preferences, or other market dynamics affecting the demand for their products.
 
-- Monthey's Decline: The bar chart shows that Monthey experienced a substantial decrease in sales in 2023 compared to 2022. This would be a key point of concern for Lait Equitable, and understanding why Monthey is underperforming is essential. This could be due to a range of factors, such as local economic conditions, operational challenges, increased competition, or changes in consumer preference within that particular area.
+-   Monthey's Decline: The bar chart shows that Monthey experienced a substantial decrease in sales in 2023 compared to 2022. This would be a key point of concern for Lait Equitable, and understanding why Monthey is underperforming is essential. This could be due to a range of factors, such as local economic conditions, operational challenges, increased competition, or changes in consumer preference within that particular area.
 
 ### Map
 
