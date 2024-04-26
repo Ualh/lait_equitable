@@ -328,3 +328,31 @@ merged_sales_data.head()
 ```
 The 2022 sales data has been aggregated and standardized for each location.
 The merged dataset now shows the total sales per location for both 2022 and 2023
+
+### Merging Political Parties and Sales
+#### Wrangling and Cleaning
+```{r}
+# Read sales data from Excel
+sales_data <- read_excel("../data/Ventes annuelles.xlsx")
+
+# Read political party data from Excel
+party_data <- read_excel("../data/partisPolitiqueManor.xlsx")
+
+# Clean up party_data to match sales_data locations
+party_data_cleaned <- party_data %>%
+  mutate(Location = gsub(" ", "", Location)) %>%
+  filter(Location %in% sales_data$Location)
+
+# Calculate party presence percentages for each location
+party_data_cleaned <- party_data_cleaned %>%
+  mutate(PLR_Presence = PLR / (PLR + PS + UDC + Centre + Verts) * 100,
+         PS_Presence = PS / (PLR + PS + UDC + Centre + Verts) * 100,
+         UDC_Presence = UDC / (PLR + PS + UDC + Centre + Verts) * 100,
+         Centre_Presence = Centre / (PLR + PS + UDC + Centre + Verts) * 100,
+         Verts_Presence = Verts / (PLR + PS + UDC + Centre + Verts) * 100)
+
+# Merge sales_data with party presence data
+merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
+```
+#### Description
+UTILISER CODE POUR DISPLAY DATA (JAYESH)
