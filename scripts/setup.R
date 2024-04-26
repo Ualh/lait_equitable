@@ -2,12 +2,12 @@
 ## The following uses renv to help with reproducibility ##
 ##########################################################
 
-# Uncomment the codes in this section if you would like to use it with your
-# Check if renv is installed and load it
-# if (!require("renv", character.only = TRUE)) {
-#   install.packages("renv")
-#   library("renv", character.only = TRUE)
-# }
+#Uncomment the codes in this section if you would like to use it with your
+#Check if renv is installed and load it
+if (!require("renv", character.only = TRUE)) {
+  install.packages("renv")
+  library("renv", character.only = TRUE)
+}
 
 # Initialize renv and restore packages from the lockfile
 # renv::init()
@@ -83,8 +83,8 @@ knitr::opts_chunk$set(
   dpi = 300,
   out.width = "70%",
   fig.align = "center",
-  fig.width = 6,
-  fig.height = 4,
+  fig.width = 8,
+  fig.height = 6,
   fig.asp = 0.618,
   fig.show = "hold",
   message = FALSE,
