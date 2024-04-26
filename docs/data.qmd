@@ -4,6 +4,11 @@
 source(here::here("scripts/setup.R"))
 ```
 
+```{python}
+import os
+print(os.getcwd())  # In Python, the current working directory can be checked using the os module
+import pandas as pd
+```
 * Sources
 * Description
 * Wrangling/cleaning
@@ -11,19 +16,14 @@ source(here::here("scripts/setup.R"))
 * Listing anomalies and outliers (could be part of EDA too)
 
 ## Swiss Producer
-### Load datasets
+### Wrangling and Cleaning
 ```{r}
 library(data.table)
 
 file_path <- "../data/"
 
-#df_producteur <- fread(paste0(file_path, "Producteur_lait_Donnes_17_03_2024 15_57_31.csv"))
-
 df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
-```
 
-### Df producteur Lait Cru Description
-```{r}
 df_producteur$date <- as.Date(df_producteur$date)
  library(kableExtra)
 # Create a tibble with variable descriptions for df_producteur
@@ -44,6 +44,11 @@ variable_table %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 
 ```
+
+### Description
+This data set explains the Milk price to producers over time. Essential for Macro Anaylsis of the milk industry in Switzerland.
+
+Have a look : 
 ```{r}
 # create a new data cleaned
 df_producteur_show <- df_producteur %>%
@@ -93,13 +98,8 @@ reactable(
 ```
 
 ## Lait Equitable Sales 
-```{python}
-import os
-print(os.getcwd())  # In Python, the current working directory can be checked using the os module
-import pandas as pd
-```
-
 ### Dataset Sales 2023
+#### Wrangling and Cleaning
 ```{python}
 file_path = '../data/all_products_sales_per_stores_2023.xlsx'
 df = pd.read_excel(file_path, sheet_name='Sheet1')
@@ -134,26 +134,80 @@ correct_city_names = {
     'Saint-Gall Webersbleiche': 'St. Gall'
 }
 df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x))
+#load the dataset in R
+```
 
-# Display the cleaned dataset
-df.head()
+#### Description
+```{r}
+#load python df
+df_sales_2023 <- py$df
+
+# Load necessary libraries
+library(tibble)
+library(kableExtra)
+
+# Create a tibble with variable descriptions for df_manor_sales
+variable_table <- tibble(
+  Variable = c("Row Labels", "Monthly Columns (2023-01-01 to 2023-12-01)", "Grand Total"),
+  Description = c(
+    "Identifies the Manor store location by name.",
+    "Each column represents sales figures for a specific month of 2023",
+    "Total sales across all months of 2023 for each location"
+  )
+)
+
+# Display the table using kableExtra
+variable_table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+
 ```
 
 The dataset contains monthly sales data from different Manor store locations for the year 2023. 
 
-Here's an overview of the dataset structure and the initial rows:
+Have a look : 
 
-- Columns
-Row Labels: Store location names (city or specific store name).
-Monthly Columns (2023-01-01 to 2023-12-01): Each column represents sales figures for a specific month of 2023.
-Grand Total: Total sales across all months of 2023 for each location.
+```{r}
+# Using the provided column names correctly in the dataframe df_sales_2023
+df_sales_2023_show <- df_sales_2023 %>%
+  # Ensure you convert the column names to standard ones if needed
+  rename(Location = `Row Labels`) %>%
+  # Correctly sum the monthly sales columns from Jan 2023 to Dec 2023
+  mutate(Total_Sales = rowSums(select(., `Jan 2023`:`Dec 2023`), na.rm = TRUE)) %>%
+  select(Location, `Jan 2023`:`Dec 2023`, Total_Sales) %>%
+  mutate_if(is.numeric, round, 2)  # round all numeric columns to 2 decimal places
 
-- Data Types
-The 'Row Labels' column is of type object (string), which lists the locations.
-Monthly sales data from January to August are integers, and from September to December, they are floats.
-'Grand Total' is also a float, representing the sum of monthly sales.
+# Display the data using reactable for an interactive table
+reactable(
+  df_sales_2023_show,  
+  columns = list(
+    Total_Sales = colDef(
+      align = "right",
+      style = function(value) {
+        # Apply conditional formatting based on the total sales value
+        if (value > 10000) {
+          color <- "green"  # High total sales in red
+        } else if (value < 5000) {
+          color <- "red"  # Lower sales in green
+        } else {
+          color <- "black"  # Moderate sales in black
+        }
+        list(color = color)
+      }
+    )
+  ),
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+
+```
 
 ### Dataset Sales 2022
+#### Wrangling and Cleaning
 ```{python}
 # Load the data for 2022
 file_path_2022 = '../data/sales_2022.xlsx'
@@ -178,19 +232,85 @@ df_2022.rename(columns=city_name_mapping, inplace=True)
 sales_columns_2022 = [col for col in df_2022.columns if col not in ['Code article', 'Description article', 'Marque', 'Code Fournisseur', 'Description Fournisseur']]
 df_2022_total_sales = df_2022[sales_columns_2022].sum().reset_index()
 df_2022_total_sales.columns = ['Location', 'Total Sales 2022']
-
-# Display the adjusted DataFrame for total sales per location for 2022
-df_2022_total_sales.head()
 ```
 
-The 2022 dataset has a different structure from the 2023 data. It consists of multiple products and their sales across various locations, with the following key columns:
+#### Description
+```{r}
+# Load the 2022 sales data
+df_sales_2022 <- py$df_2022
+# Load necessary libraries
+library(tibble)
+library(kableExtra)
 
-- Code article: Unique identifier for each product.
-- Description article: Descriptive name of the product.
-- Marque: Brand of the product.
-- Code Fournisseur: Supplier code.
-- Description Fournisseur: Supplier name.
-- Location Columns (e.g., Ascona-Delta, Baden, Bâle, etc.): Each of these columns represents sales figures for that specific location.
+# Create a tibble with variable descriptions for df_sales
+variable_table <- tibble(
+  Variable = c("Code article", "Description article", "Marque", "Code Fournisseur", "Description Fournisseur",
+               "Location Columns (e.g., Ascona-Delta, Baden, Bâle, etc.)"),
+  Description = c(
+    "Unique identifier for each product.",
+    "Descriptive name of the product.",
+    "Brand of the product.",
+    "Supplier code.",
+    "Supplier name.",
+    "Each of these columns represents sales figures for that specific location."
+  )
+)
+
+# Display the table using kableExtra
+variable_table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+```
+
+The 2022 dataset has a different structure from the 2023 data. It consists of multiple products and their sales across various locations, with the following key columns
+
+Have a look : 
+```{r}
+library(dplyr)
+library(reactable)
+
+# Assuming the dataframe is correctly named df_sales_2022 and is already loaded
+# Ensure the dataframe is available in your R environment
+print(head(df_sales_2022))
+
+# Prepare the data by calculating the total sales per product across all locations
+df_sales_2022_show <- df_sales_2022 %>%
+  mutate(Total_Sales = rowSums(select(., `Ascona-Delta`:`Yverdon-les-Bains`), na.rm = TRUE)) %>%
+  select(`Code article`, `Description article`, `Marque`, `Code Fournisseur`, `Description Fournisseur`, `Ascona-Delta`:`Yverdon-les-Bains`, Total_Sales) %>%
+  mutate_if(is.numeric, round, 2)  # Round all numeric columns to 2 decimal places
+
+# Display the data using reactable for an interactive and visually appealing table
+reactable(
+  df_sales_2022_show,
+  columns = list(
+    Total_Sales = colDef(
+      align = "right",
+      style = function(value) {
+        if (value > 10000) {
+          color <- "black"  # High sales volumes in red
+        } else if (value < 1000) {
+          color <- "black"  # Lower sales volumes in green
+        } else {
+          color <- "black"  # Moderate sales volumes in black
+        }
+        list(color = color)
+      }
+    ),
+    `Code article` = colDef(name = "Product Code"),
+    `Description article` = colDef(name = "Product Description"),
+    `Marque` = colDef(name = "Brand"),
+    `Code Fournisseur` = colDef(name = "Supplier Code"),
+    `Description Fournisseur` = colDef(name = "Supplier Name")
+  ),
+  highlight = TRUE,
+  defaultPageSize = 5,
+  paginationType = "numbers",
+  searchable = TRUE,
+  sortable = TRUE,
+  resizable = TRUE
+)
+
+```
 
 #### Merging 2022 and 2023 dataset
 ```{python}
@@ -207,10 +327,4 @@ merged_sales_data.fillna(0, inplace=True)
 merged_sales_data.head()
 ```
 The 2022 sales data has been aggregated and standardized for each location.
-The merged dataset now shows the total sales per location for both 2022 and 2023:
-### 
-
-
-
-
-
+The merged dataset now shows the total sales per location for both 2022 and 2023
