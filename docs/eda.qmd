@@ -4,13 +4,7 @@
 source(here::here("scripts/setup.R"))
 ```
 
--   Mapping out the underlying structure
--   Identifying the most important variables
--   Univariate visualizations
--   Multivariate visualizations
--   Summary tables
-
-```{python}
+```{python, echo = FALSE, message = FALSE}
 import os
 print(os.getcwd())  # In Python
 import pandas as pd
@@ -35,7 +29,6 @@ import seaborn as sns
 ```
 
 ## Lait Equitable Products
-
 ### Sales Distribution Accross Locations
 
 ```{python}
@@ -45,7 +38,7 @@ sns.set_theme(style="whitegrid")
 # Monthly sales distribution across all locations
 monthly_sales = df.set_index('Row Labels').iloc[:, :-1]  # Exclude the Grand Total for monthly trends
 
-# Plotting the total sales per location
+# Plotting the total sales per location with 
 plt.figure(figsize=(14, 7))
 sns.barplot(data=monthly_sales.transpose(), estimator=sum, ci=None)
 plt.title('Total Sales by Month Across All Locations (2023)')
