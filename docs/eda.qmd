@@ -62,6 +62,19 @@ Distribution of Sales Across Locations: The second chart, a boxplot, illustrates
 
 From the initial look, it seems there are noticeable variations in sales performance across different months and locations, which could be influenced by factors such as seasonal demand, marketing efforts, or local economic conditions.
 
+### Sales Distribution Accross Locations
+```{r}
+# Read sales data from Excel
+sales_data <- read_excel("Ventes annuelles.xlsx")
+
+# Plotting annual sales as a bar plot
+ggplot(sales_data, aes(x = reorder(Location, -`2023`), y = `2023`)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  labs(x = "Location", y = "Annual Sales", title = "Annual Sales by Location (2023)") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+
 ### Top Performing / Worse Performing Locations
 
 ```{python, fig.height=14, fig.width=7, dpi=300}
