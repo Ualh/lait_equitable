@@ -1,14 +1,5 @@
 # Data
 
-```{r, echo = FALSE, message = FALSE}
-source(here::here("scripts/setup.R"))
-```
-
-```{python}
-import os
-print(os.getcwd())  # In Python, the current working directory can be checked using the os module
-import pandas as pd
-```
 * Sources
 * Description
 * Wrangling/cleaning
@@ -68,26 +59,6 @@ df_producteur_show <- df_producteur %>%
 library(reactable)
 reactable(
   df_producteur_show,  
-  columns = list(
-    date = colDef(
-      align = "center",  # Center align the date column
-      minWidth = 150
-    ),
-    delta_pourcent = colDef(
-      align = "right",  # Right align the price column
-      style = function(value) {
-        # Apply conditional formatting based on the price value
-        if (value < 15) {
-          color <- "green"  # Green for high prices
-        } else if (value > 30) {
-          color <- "red"    # Red for low prices
-        } else {
-          color <- "black"  # Default color for other values
-        }
-        list(color = color)
-      }
-    )
-  ),
   highlight = TRUE,  # Highlight rows on hover
   defaultPageSize = 10,  # Display 10 rows per page
   paginationType = "numbers",  # Use numbers for page navigation
@@ -101,6 +72,7 @@ Source - [asjdaksjdh](https://www.agridea.ch/fr/themes/production-animaliere/bov
 ## Lait Equitable Sales 
 ### Dataset Sales 2023
 #### Wrangling and Cleaning
+
 ```{python}
 file_path = '../data/all_products_sales_per_stores_2023.xlsx'
 df = pd.read_excel(file_path, sheet_name='Sheet1')
@@ -138,8 +110,15 @@ df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x)
 #load the dataset in R
 ```
 
+We loaded the dataset and renamed the columns to make it more readable. We also standardized the city names based on the provided mapping.
+
 #### Description
-```{r}
+The dataset is very light and only contains the sales data for the year 2023. It is essential however for the analysis of the sales of Lait Equitable in different Manor stores.
+
+The dataset contains monthly sales data from different Manor store locations for the year 2023. 
+
+Have a look : 
+```{r warning=FALSE, message=FALSE}
 #load python df
 df_sales_2023 <- py$df
 
@@ -162,13 +141,6 @@ variable_table %>%
   kbl() %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 
-```
-
-The dataset contains monthly sales data from different Manor store locations for the year 2023. 
-
-Have a look : 
-
-```{r}
 # Using the provided column names correctly in the dataframe df_sales_2023
 df_sales_2023_show <- df_sales_2023 %>%
   # Ensure you convert the column names to standard ones if needed
@@ -181,22 +153,6 @@ df_sales_2023_show <- df_sales_2023 %>%
 # Display the data using reactable for an interactive table
 reactable(
   df_sales_2023_show,  
-  columns = list(
-    Total_Sales = colDef(
-      align = "right",
-      style = function(value) {
-        # Apply conditional formatting based on the total sales value
-        if (value > 10000) {
-          color <- "green"  # High total sales in red
-        } else if (value < 5000) {
-          color <- "red"  # Lower sales in green
-        } else {
-          color <- "black"  # Moderate sales in black
-        }
-        list(color = color)
-      }
-    )
-  ),
   highlight = TRUE,  # Highlight rows on hover
   defaultPageSize = 10,  # Display 10 rows per page
   paginationType = "numbers",  # Use numbers for page navigation
@@ -204,11 +160,11 @@ reactable(
   sortable = TRUE,  # Allow sorting
   resizable = TRUE  # Allow column resizing
 )
-
 ```
 
 ### Dataset Sales 2022
 #### Wrangling and Cleaning
+Following the same process as the 2023 dataset, we will load, clean, and standardize the 2022 sales data.
 ```{python}
 # Load the data for 2022
 file_path_2022 = '../data/sales_2022.xlsx'
@@ -236,6 +192,7 @@ df_2022_total_sales.columns = ['Location', 'Total Sales 2022']
 ```
 
 #### Description
+The 2022 dataset is not monthly like the 2023 dataset. It consists of multiple products and their total sales across various locations, with the following key columns:
 ```{r}
 # Load the 2022 sales data
 df_sales_2022 <- py$df_2022
@@ -263,8 +220,7 @@ variable_table %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 ```
 
-The 2022 dataset has a different structure from the 2023 data. It consists of multiple products and their sales across various locations, with the following key columns
-
+Indeed the 2022 dataset has a different structure from the 2023 data and is even more ligtht.
 Have a look : 
 ```{r}
 library(dplyr)
@@ -283,26 +239,6 @@ df_sales_2022_show <- df_sales_2022 %>%
 # Display the data using reactable for an interactive and visually appealing table
 reactable(
   df_sales_2022_show,
-  columns = list(
-    Total_Sales = colDef(
-      align = "right",
-      style = function(value) {
-        if (value > 10000) {
-          color <- "black"  # High sales volumes in red
-        } else if (value < 1000) {
-          color <- "black"  # Lower sales volumes in green
-        } else {
-          color <- "black"  # Moderate sales volumes in black
-        }
-        list(color = color)
-      }
-    ),
-    `Code article` = colDef(name = "Product Code"),
-    `Description article` = colDef(name = "Product Description"),
-    `Marque` = colDef(name = "Brand"),
-    `Code Fournisseur` = colDef(name = "Supplier Code"),
-    `Description Fournisseur` = colDef(name = "Supplier Name")
-  ),
   highlight = TRUE,
   defaultPageSize = 5,
   paginationType = "numbers",
@@ -323,15 +259,29 @@ merged_sales_data = pd.merge(df_2022_total_sales, df_2023_total_sales, on='Locat
 
 # Filling any NaN values that might have occurred due to locations present in one dataset and not the other
 merged_sales_data.fillna(0, inplace=True)
-
-# Display the merged dataset with total sales for both years
-merged_sales_data.head()
 ```
+```{r}
+# Load the merged sales data
+df_merged_sales <- py$merged_sales_data
+#show it using reactable
+reactable(
+  df_merged_sales,  
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
 The 2022 sales data has been aggregated and standardized for each location.
 The merged dataset now shows the total sales per location for both 2022 and 2023
 
-### Merging Political Parties and Sales
+### Political Parties Dataset
 #### Wrangling and Cleaning
+
+explain what you did...
 ```{r}
 # Read sales data from Excel
 sales_data <- read_excel("../data/Ventes annuelles.xlsx")
@@ -356,4 +306,24 @@ party_data_cleaned <- party_data_cleaned %>%
 merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 ```
 #### Description
+
+Write kableextra to describe the dataset here
+```{r}
+
+```
+
+```{r}
+# Display the merged data using reactable
+reactable(
+  merged_data,  
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+
+```
+
 UTILISER CODE POUR DISPLAY DATA (JAYESH)
