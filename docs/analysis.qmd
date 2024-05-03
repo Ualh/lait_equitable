@@ -47,6 +47,12 @@ We observe that this model is very vague because is just a naive model that assu
 ### ARIMA Model
 #### Stationarity
 ```{r}
+# re-arragen the df_producteur data in ascending order
+df_producteur <- df_producteur[order(df_producteur$date),]
+
+#creating tsibble for organic and non-organic milk prices
+df_producteur_ts_non_bio <- ts(df_producteur$prix_non_bio, start=c(2017, 12), frequency=12)
+df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=12)
 #check for stationarity
 adf.test(df_producteur_ts_non_bio)
 adf.test(df_producteur_ts_bio)
@@ -249,24 +255,6 @@ forecast_table_ets %>%
 
 ```{r}
 # compare ARIMA and ETS forecast
-forecast_table %>%
-  left_join(forecast_table_ets, by = "Month") %>%
-  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
-         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS)
-
-#plot the difference
-forecast_table %>%
-  left_join(forecast_table_ets, by = "Month") %>%
-  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
-         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS) %>%
-  pivot_longer(cols = c(Diff_Non_Organic, Diff_Bio), names_to = "Type", values_to = "Difference") %>%
-  ggplot(aes(x = Month, y = Difference, color = Type)) +
-  geom_line() +
-  labs(title = "Difference in Forecasted Prices of Organic and Non-Organic Milk",
-       x = "Month",
-       y = "Difference",
-       color = "Type") +
-  theme_minimal()
 
 ```
 

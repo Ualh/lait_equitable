@@ -1,5 +1,7 @@
 # Exploratory data analysis
 
+EMELINE EDA
+
 ## Lait Equitable Products
 ### Sales Distribution Accross Months
 ```{r}
