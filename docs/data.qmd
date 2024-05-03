@@ -110,7 +110,6 @@ correct_city_names = {
     'Saint-Gall Webersbleiche': 'St. Gall'
 }
 df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x))
-#load the dataset in R
 ```
 
 The dataset from 2023 was meticulously cleaned and standardized to ensure accuracy in our analysis. Initial steps included loading the data from an Excel file and renaming columns to reflect clearer, month-specific sales data for easier readability. Additionally, we corrected city names to maintain consistency across datasets. This included mapping various forms of city names to their standardized counterparts (e.g., 'Bâle' to 'Basel').
@@ -308,6 +307,7 @@ party_data_cleaned <- party_data_cleaned %>%
 # Merge sales_data with party presence data
 merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 ```
+
 #### Description
 
 Write kableextra to describe the dataset here

@@ -1,116 +1,143 @@
 # Exploratory data analysis
 
-```{python, echo = FALSE, message = FALSE}
-import os
-print(os.getcwd())  # In Python
-import pandas as pd
-import folium
-from geopy.geocoders import Nominatim
-import time
-import pyxlsb
-import branca.colormap as cmp
-import branca
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt
-import seaborn as sns
-```
-
 ## Lait Equitable Products
-### Sales Distribution Accross Locations
-
-```{python}
-# Setting up visualization styles
-sns.set_theme(style="whitegrid")
-
-# Monthly sales distribution across all locations
-monthly_sales = df.set_index('Row Labels').iloc[:, :-1]  # Exclude the Grand Total for monthly trends
-
-# Plotting the total sales per location with 
-plt.figure(figsize=(14, 7))
-sns.barplot(data=monthly_sales.transpose(), estimator=sum, ci=None)
-plt.title('Total Sales by Month Across All Locations (2023)')
-plt.xlabel('Month')
-plt.ylabel('Total Sales')
-plt.xticks(rotation=45)
-plt.show()
-
-# Boxplot to visualize distribution of total sales across all locations
-plt.figure(figsize=(10, 6), dpi=300)
-sns.boxplot(data=monthly_sales, orient='h')
-plt.title('Distribution of Sales Across Locations')
-plt.xlabel('Sales')
-plt.ylabel('Locations')
-plt.show()
-```
-
-Total Sales by Month Across All Locations (2023): The first chart displays the total sales for each month across all Manor locations. This provides an insight into any seasonal trends or fluctuations in sales volume throughout the year.
-
-Distribution of Sales Across Locations: The second chart, a boxplot, illustrates the distribution of sales across different locations. It highlights the variability and range of sales figures, indicating which locations might be underperforming or outperforming.
-
-From the initial look, it seems there are noticeable variations in sales performance across different months and locations, which could be influenced by factors such as seasonal demand, marketing efforts, or local economic conditions.
-
-### Sales Distribution Accross Locations
+### Sales Distribution Accross Months
 ```{r}
-# Read sales data from Excel
-sales_data <- read_excel("Ventes annuelles.xlsx")
+# Remove 'Grand Total' column and the row labels column
+monthly_sales <- df_sales_2023 %>% 
+  select(-c(`Grand Total`, `Row Labels`))
 
-# Plotting annual sales as a bar plot
-ggplot(sales_data, aes(x = reorder(Location, -`2023`), y = `2023`)) +
-  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
-  labs(x = "Location", y = "Annual Sales", title = "Annual Sales by Location (2023)") +
+# Aggregate the sales per month across all locations
+total_sales_per_month <- colSums(monthly_sales)
+
+# Create a data frame for plotting
+monthly_sales_df <- data.frame(Month = names(total_sales_per_month), Sales = total_sales_per_month)
+
+# Sort the data frame by Sales in descending order
+sorted_monthly_sales_df <- monthly_sales_df %>%
+  arrange(desc(Sales))
+
+# Plotting with ggplot2 using viridis color palette
+ggplot(sorted_monthly_sales_df, aes(x=reorder(Month, -Sales), y=Sales, fill=Month)) +
+  geom_bar(stat="identity", show.legend = FALSE, fill = "#24918d", color = "black") + 
+  labs(title = "Total Sales by Month Across All Locations (2023)", x = "Month", y = "Total Sales") +
+  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+The graph shows total monthly sales across all locations for the "Lait Equitable" in *2023.* It shows the month with the highest sales, *March* and continuing to lower sales months. The least profitable month appears to be *July.* 
 
-### Top Performing / Worse Performing Locations
+- Highest Sales in March: The graph starts with March, which shows the highest sales, almost reaching 25,000 units. This suggests that March was a particularly strong month for sales, possibly due to seasonal factors or specific marketing campaigns.
+- Gradual Decline in Sales: As we move from left to right, there is a general trend of declining sales. After March, the next highest sales are in December, followed by April, May, and so on. This indicates that sales in March were not sustained throughout the year.
+- Mid-year and End-Year Trends: While the graph is not in chronological order, it shows that some months like December (typically strong due to the holiday season) also performed well, but none reached the peak seen in March.
+- Lower Sales in the Latter Months Displayed: The months at the right end of the graph, such as June and July, show the lowest sales figures in the year. This could indicate a seasonal dip or other market dynamics affecting these months. One supposition could be that people are on vacations at these dates due to school vacations.
 
-```{python, fig.height=14, fig.width=7, dpi=300}
-# Adding a 'Total Sales' column to the dataframe for easier analysis of total sales per location
-df['Total Sales'] = df.iloc[:, 1:-1].sum(axis=1)
+### Sales Distribution Accross Locations
+```{r}
+# First, we need to remove the 'Grand Total' column if it's included
+df <- df_sales_2023[, -ncol(df_sales_2023)]
+# Sum sales across all months for each location
+total_sales_by_location <- df %>%
+  mutate(Total_Sales = rowSums(select(., -`Row Labels`))) %>%
+  select(`Row Labels`, Total_Sales)
 
-# Sorting the data by total sales to identify top and bottom locations
-top_locations = df.sort_values(by='Total Sales', ascending=False).head(5)
-bottom_locations = df.sort_values(by='Total Sales', ascending=True).head(5)
+# Sort the locations by total sales in descending order
+sorted_sales_by_location <- total_sales_by_location %>%
+  arrange(desc(Total_Sales))
 
-# Plotting top and bottom performing locations
-plt.figure(figsize=(14, 7))
-sns.barplot(x='Total Sales', y='Row Labels', data=top_locations, palette='viridis')
-plt.title('Top Performing Locations by Total Sales')
-plt.xlabel('Total Sales')
-plt.ylabel('Locations')
-plt.show()
-
-plt.figure(figsize=(14, 7))
-sns.barplot(x='Total Sales', y='Row Labels', data=bottom_locations, palette='magma')
-plt.title('Bottom Performing Locations by Total Sales')
-plt.xlabel('Total Sales')
-plt.ylabel('Locations')
-plt.show()
+# Plotting the data with ggplot2
+ggplot(sorted_sales_by_location, aes(x=reorder(`Row Labels`, Total_Sales), y=Total_Sales, fill=`Row Labels`)) +
+  geom_bar(stat="identity", show.legend = FALSE,  fill = "#24918d", color = "black") + 
+  labs(title = "Total Sales by Location (2023)", x = "Location", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) # Rotate the x-axis text for better readability
 ```
 
+The graph illustrates the total sales by location for Lait Equitable across various stores in 2023, organized from the lowest to the highest sales volume. 
+
+- Variability in Sales Across Locations: The graph displays a significant variation in sales across different locations. The left side of the graph shows locations with the least sales, starting with Chur, Rapperswil, St. Gall, and progressively increasing towards the right.
+- Low Sales in Certain Areas: Locations like Chur, Rapperswil, and St. Gall have notably low sales, which could indicate either a lower demand for Lait Equitable's products in these areas or possibly less effective marketing and distribution strategies.
+- High Sales in Specific Locations: The right end of the graph, particularly the last five locations, shows a sharp increase in sales. Notably, Vevey, Marin-Epagnier, Sierre and Monthey exhibit high sales, with Monthey being the highest. This might indicate a stronger market presence, better consumer acceptance, or more effective promotional activities in these regions.
+- Potential Market Strengths and Weaknesses: The graph effectively highlights where Lait Equitable is performing well and where there might be room for improvement. For instance, the high sales in cities like Sierre and Monthey suggest strong market penetration and acceptance.
+- Strategic Insights: For the Lait Equitable, this graph provides crucial data points for understanding which locations might need more focused marketing efforts or adjustments in distribution strategies. Additionally, it could help in identifying successful strategies in high-performing locations that could be replicated in areas with lower sales.
+
+```{r}
+#remove grand total
+df <- df_sales_2023[, -ncol(df_sales_2023)]
+# Transform the data into a long format where each row contains a location, a month, and sales
+long_data <- df %>%
+  pivot_longer(cols = -`Row Labels`, names_to = "Month", values_to = "Sales") %>%
+  mutate(Location = `Row Labels`)
+
+# Create a plotly object for an interactive boxplot
+fig <- plot_ly(long_data, x = ~Location, y = ~Sales, type = 'box',
+               hoverinfo = 'text', text = ~paste('Month:', Month, '<br>Sales:', Sales),
+               marker = list(color = "#7e57c2",
+                             boxpoints = "all",
+                             jitter = 0.3),
+               box = list(line = list(color = "#24918d"))
+               ) %>% 
+  layout(title = "Distribution of Monthly Sales Across Locations",
+         xaxis = list(title = "Location"),
+         yaxis = list(title = "Monthly Sales"),
+         showlegend = FALSE, 
+         width= 600,
+         height = 800) %>% 
+  config(displayModeBar = FALSE) # Optional: hide the mode bar
+
+
+# Display the plot
+fig
+
+```
+
+This graphs show the variability in sales across different locations for each month in 2023. The boxplot provides a visual representation of the distribution of sales figures, highlighting the range, median, and outliers in each location.
+
+We observe that the outliers are high or low sales months as we analyze previously. It confirms the previous analysis and provides a more detailed view of the sales distribution across locations.
+
+### Top Performing / Worse Performing Locations
+```{r}
+#using grand total to sort the data from top to bottom
+df <- df_sales_2023
+#using 'grand total' column as total sales plot the top and bottom locations
+df %>%
+  arrange(desc(`Grand Total`)) %>%
+  slice_head(n = 5) %>%
+  select(`Row Labels`, `Grand Total`) %>%
+  ggplot(aes(x = reorder(`Row Labels`, `Grand Total`), y = `Grand Total`, fill = `Row Labels`)) +
+  geom_bar(stat = "identity", show.legend = FALSE, fill = "#33848D", color = "black") +
+  labs(title = "Top 5 Performing Locations by Total Sales (2023)", x = "Location", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) # Rotate the x-axis text for better readability
+
+# worse performing locations
+df %>%
+  arrange(`Grand Total`) %>%
+  slice_head(n = 5) %>%
+  select(`Row Labels`, `Grand Total`) %>%
+  ggplot(aes(x = reorder(`Row Labels`, `Grand Total`), y = `Grand Total`, fill = `Row Labels`)) +
+  geom_bar(stat = "identity", show.legend = FALSE, fill = "#33848D", color = "black") +
+  labs(title = "Bottom 5 Performing Locations by Total Sales (2023)", x = "Location", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) # Rotate the x-axis text for better readability
+
+```
+
+As previously analyzed, the top and bottom performing locations are displayed in the bar charts. The top 5 locations with the highest total sales are shown in the first graph, while the bottom 5 locations with the lowest total sales are displayed in the second graph.
+
+Top-performing locations are : Monthey, Sierre, Marin-Epagnier, Vevey, and Sion. Worse-performing locations are : Basel, St. Gall, Sargans, Rapperswil, and Chur.
+
 ### 2022 vs 2023
+```{r}
+#plot a bar chart to compare the total sales in 2022 and 2023 and add transparency to the bars
+df_merged_sales %>%
+  ggplot(aes(x = reorder(Location, -`Total Sales 2023`), y = `Total Sales 2023`, fill = "2023")) +
+  geom_bar(aes(x = reorder(Location, -`Total Sales 2022`), y = `Total Sales 2022`, fill = "2022"), stat = "identity", position = "dodge", fill = "#7e57c2", color = "black", alpha = 0.7 ) +
+  geom_bar(stat = "identity", position = "dodge", fill = "#33848D", color = "black", alpha = 0.7) +
+  labs(title = "Total Sales Comparison Between 2022 and 2023 by Location", x = "Location", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust=0.5)) # Rotate the x-axis text for better readability
 
-```{python}
-# Setting up the bar chart for Year-over-Year comparison
-plt.figure(figsize=(14, 8))
-width = 0.35  # the width of the bars
-
-locations = merged_sales_data['Location']
-index = range(len(locations))
-sales_2022 = merged_sales_data['Total Sales 2022']
-sales_2023 = merged_sales_data['Total Sales 2023']
-
-bars1 = plt.bar(index, sales_2022, width, label='2022')
-bars2 = plt.bar([p + width for p in index], sales_2023, width, label='2023')
-
-plt.xlabel('Location')
-plt.ylabel('Total Sales')
-plt.title('Year-over-Year Sales Comparison by Location')
-plt.xticks([p + width / 2 for p in index], locations, rotation=90)
-plt.legend()
-
-plt.show()
 ```
 
 -   Trend of Decline: A significant number of Manor locations have lower sales figures in 2023 compared to 2022. This trend suggests that Lait Equitable might be facing challenges in these areas, which could include increased competition, changing consumer preferences, or other market dynamics affecting the demand for their products.
@@ -282,166 +309,4 @@ interactive_plot_seaso_2 <- interactive_plot_seaso_2 %>%
 
 # Display the interactive plot
 interactive_plot_seaso_2
-```
-
-## Forecast
-
-### ARIMA Model
-
-```{r, echo = FALSE, message = FALSE}
-library(fpp3)
-library(tsibbledata)
-library(flextable)
-library(readxl)
-library(patchwork)
-library(tseries)
-library(forecast)
-```
-
-```{r}
-# re-arragen the df_producteur data in ascending order
-df_producteur <- df_producteur[order(df_producteur$date),]
-
-#creating tsibble for organic and non-organic milk prices
-df_producteur_ts_non_bio <- ts(df_producteur$prix_non_bio, start=c(2017, 12), frequency=12)
-df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=12)
-
-#plot the two time series side by side
-autoplot(df_producteur_ts_non_bio)
-autoplot(df_producteur_ts_bio) + labs(title = "Time Series of Organic Milk Prices")
-
-#check for stationarity
-adf.test(df_producteur_ts_non_bio)
-adf.test(df_producteur_ts_bio)
-```
-
-We can reject Stationarity because p-value is too great (0.08)
-
-```{r}
-#difference the time series
-df_producteur_ts_non_bio_diff <- diff(df_producteur_ts_non_bio)
-df_producteur_ts_bio_diff <- diff(df_producteur_ts_bio)
-
-#plot them to see the differentiation
-autoplot(df_producteur_ts_non_bio_diff)+ labs(title = "Differenced Time Series of Organic Milk Prices")
-autoplot(df_producteur_ts_bio_diff) + labs(title = "Differenced Time Series of Bio Milk Prices")
-
-#check for stationarity
-adf.test(df_producteur_ts_non_bio_diff)
-adf.test(df_producteur_ts_bio_diff)
-```
-
-The test reveal a p-value of 0.01 for both series, which is not less than 0.01, so we cannot reject the null hypothesis of stationarity.
-
-```{r}
-# we still observe strong seasonality therefore we will difference the series again but this time with seasonal difference
-df_producteur_ts_non_bio_diff_seas <- diff(df_producteur_ts_non_bio_diff, lag = 12)
-df_producteur_ts_bio_diff_seas <- diff(df_producteur_ts_bio_diff, lag = 12)
-
-#plot them to see the differentiation
-autoplot(df_producteur_ts_non_bio_diff_seas) + labs(title = "Seasonal Differenced Time Series of Organic Milk Prices")
-autoplot(df_producteur_ts_bio_diff_seas) + labs(title = "Seasonal Differenced Time Series of Bio Milk Prices")
-
-# test for stationarity
-adf.test(df_producteur_ts_non_bio_diff_seas)
-adf.test(df_producteur_ts_bio_diff_seas)
-```
-
-```{r}
-# Fit the ARIMA model
-fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = TRUE)
-fit_bio <- auto.arima(df_producteur_ts_bio, seasonal = TRUE)
-
-# Forecast the next 12 months
-forecast_non_bio <- forecast(fit_non_bio, h = 12)
-forecast_bio <- forecast(fit_bio, h = 12)
-
-#show the components used for the ARIMA model
-fit_non_bio %>% summary()
-fit_bio %>% summary()
-
-#plot the forecasted values
-autoplot(forecast_non_bio) + labs(title = "Forecasted Prices of Non-Organic Milk")
-autoplot(forecast_bio) + labs(title = "Forecasted Prices of Organic Milk")
-```
-
-```{r}
-# Create a table of the forecasted values
-forecast_table <- tibble(
-  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
-  Non_Organic_Forecast = forecast_non_bio$mean,
-  Bio_Forecast = forecast_bio$mean
-)
-forecast_table
-
-#plot the forecasted values
-forecast_table %>%
-  pivot_longer(cols = c(Non_Organic_Forecast, Bio_Forecast), names_to = "Type", values_to = "Forecasted_Price") %>%
-  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
-  geom_line() +
-  labs(title = "Forecasted Prices of Organic and Non-Organic Milk",
-       x = "Month",
-       y = "Price",
-       color = "Type") +
-  theme_minimal()
-```
-
-### Exponential Smoothing
-
-```{r}
-# Fit the ETS model
-fit_non_bio_ets <- ets(df_producteur_ts_non_bio)
-fit_bio_ets <- ets(df_producteur_ts_bio)
-
-# Forecast the next 12 months
-forecast_non_bio_ets <- forecast(fit_non_bio_ets, h = 12)
-forecast_bio_ets <- forecast(fit_bio_ets, h = 12)
-
-#plot the forecasted values
-autoplot(forecast_non_bio_ets) + labs(title = "Forecasted Prices of Non-Organic Milk (ETS)")
-autoplot(forecast_bio_ets) + labs(title = "Forecasted Prices of Organic Milk (ETS)")
-```
-
-```{r}
-# Create a table of the forecasted values
-forecast_table_ets <- tibble(
-  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
-  Non_Organic_Forecast_ETS = forecast_non_bio_ets$mean,
-  Bio_Forecast_ETS = forecast_bio_ets$mean
-)
-forecast_table_ets
-
-#plot the forecasted values
-forecast_table_ets %>%
-  pivot_longer(cols = c(Non_Organic_Forecast_ETS, Bio_Forecast_ETS), names_to = "Type", values_to = "Forecasted_Price") %>%
-  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
-  geom_line() +
-  labs(title = "Forecasted Prices of Organic and Non-Organic Milk (ETS)",
-       x = "Month",
-       y = "Price",
-       color = "Type") +
-  theme_minimal()
-```
-
-```{r}
-# compare ARIMA and ETS forecast
-forecast_table %>%
-  left_join(forecast_table_ets, by = "Month") %>%
-  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
-         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS)
-
-#plot the difference
-forecast_table %>%
-  left_join(forecast_table_ets, by = "Month") %>%
-  mutate(Diff_Non_Organic = Non_Organic_Forecast - Non_Organic_Forecast_ETS,
-         Diff_Bio = Bio_Forecast - Bio_Forecast_ETS) %>%
-  pivot_longer(cols = c(Diff_Non_Organic, Diff_Bio), names_to = "Type", values_to = "Difference") %>%
-  ggplot(aes(x = Month, y = Difference, color = Type)) +
-  geom_line() +
-  labs(title = "Difference in Forecasted Prices of Organic and Non-Organic Milk",
-       x = "Month",
-       y = "Difference",
-       color = "Type") +
-  theme_minimal()
-
 ```

@@ -8,9 +8,16 @@ format:
     toc: true
     toc_float: true
     code-fold: true
+    number-sections: true
+    html-math-method: katex
+    self-contained: true
+    code-summary: "Click to show code"
+    # pdf: default # use this if you want to render pdfs instead
     theme: minty
     includes:
       in_header: "../styles/styles.css"
+abstract: |
+  The following project focuses on the analysis of the Lait Equitable dataset, which contains information on the production of fair trade milk in Switzerland. The goal of this project is to analyze the dataset and identify trends and patterns in the data that can help us better understand the production of fair trade milk in Switzerland. We will use a variety of data analysis techniques, including exploratory data analysis, data visualization, and statistical modeling, to analyze the dataset and draw conclusions about the production of fair trade milk in Switzerland.
 ---
 
 ```{r child = c('intro.qmd', 'data.qmd', 'eda.qmd', 'analysis.qmd', 'concl.qmd')}

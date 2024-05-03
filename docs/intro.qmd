@@ -2,6 +2,30 @@
 
 ```{r, echo = FALSE, message = FALSE}
 source(here::here("scripts/setup.R"))
+library(viridis)
+library(fpp3)
+library(tsibbledata)
+library(flextable)
+library(readxl)
+library(patchwork)
+library(tseries)
+library(forecast)
+```
+```{python, echo = FALSE, message = FALSE}
+import os
+import pandas as pd
+import folium
+from geopy.geocoders import Nominatim
+import time
+import pyxlsb
+import branca.colormap as cmp
+import branca
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import seaborn as sns
+from matplotlib.cm import viridis
+from matplotlib.colors import to_hex
 ```
 
 ## Company Background
