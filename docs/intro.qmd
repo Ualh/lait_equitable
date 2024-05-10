@@ -11,6 +11,7 @@ library(patchwork)
 library(tseries)
 library(forecast)
 ```
+
 ```{python, echo = FALSE, message = FALSE}
 import os
 import pandas as pd
