@@ -372,6 +372,51 @@ We can now notice that there is no specific correlation between a certain politi
 We will therefore proceed to select only the Locations where a political party has more than 20% presence, and then sum all the sales per political party, to see which party has the most influence over sales.
 
 ```{r}
+
+# Read sales data from Excel
+sales_data <- read_excel("Ventes annuelles.xlsx") %>%
+  select(-`2022`)
+
+# Read political party data from Excel
+party_data <- read_excel("partisPolitiqueManor.xlsx")
+
+# Filter party data to keep only values above 20
+filtered_party_data <- party_data %>%
+  filter(PLR > 20 | PS > 20 | UDC > 20 | Centre > 20 | Verts > 20 | Vertliberaux > 20)
+
+# Create separate datasets for each political party
+plr_data <- filtered_party_data %>%
+  filter(PLR > 20) %>%
+  select(Location, PLR)
+
+ps_data <- filtered_party_data %>%
+  filter(PS > 20) %>%
+  select(Location, PS)
+
+udc_data <- filtered_party_data %>%
+  filter(UDC > 20) %>%
+  select(Location, UDC)
+
+centre_data <- filtered_party_data %>%
+  filter(Centre > 20) %>%
+  select(Location, Centre)
+
+verts_data <- filtered_party_data %>%
+  filter(Verts > 20) %>%
+  select(Location, Verts)
+
+vertliberaux_data <- filtered_party_data %>%
+  filter(Vertliberaux > 20) %>%
+  select(Location, Vertliberaux)
+
+# Merge each party's data with sales data for 2023
+plr_sales <- merge(sales_data, plr_data, by.x = "Location")
+ps_sales <- merge(sales_data, ps_data, by.x = "Location")
+udc_sales <- merge(sales_data, udc_data, by.x = "Location")
+centre_sales <- merge(sales_data, centre_data, by.x = "Location")
+verts_sales <- merge(sales_data, verts_data, by.x = "Location")
+vertliberaux_sales <- merge(sales_data, vertliberaux_data, by.x = "Location")
+
 # Calculate total sales for each party
 plr_total_sales <- sum(plr_sales$`2023`)
 ps_total_sales <- sum(ps_sales$`2023`)
