@@ -347,14 +347,14 @@ top_performing_stores
 Here, we will then make a scatterplot to identify if there is any correlation between any political party and sales of lait equitable. Our aim is to show that there might be a link with milk sales and a certain political party: are the sales correlated to a certain party presence?
 ```{r}
 # Calculate correlation coefficients for each party
-correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
-                             Correlation = sapply(merged_data[, 4:8], function(x) cor(x, merged_data$`2023`)))
+correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts", "Vertliberaux"),
+                             Correlation = sapply(merged_data[, 4:9], function(x) cor(x, merged_data$`2023`)))
 
 # Print the correlation coefficients
 print(correlation_df)
 
 # Create a matrix of plots for each party
-party_plots <- lapply(names(merged_data)[4:8], function(party) {
+party_plots <- lapply(names(merged_data)[4:9], function(party) {
   ggplot(merged_data, aes_string(x = "`2023`", y = party)) +
     geom_point() +
     geom_smooth(method = "lm", se = FALSE, color = "blue") +
@@ -367,7 +367,38 @@ matrix_plot <- gridExtra::grid.arrange(grobs = party_plots, ncol = 2)
 matrix_plot
 ```
 
+We can now notice that there is no specific correlation between a certain political party and sales of Lait équitable.
+
+We will therefore proceed to select only the Locations where a political party has more than 20% presence, and then sum all the sales per political party, to see which party has the most influence over sales.
+
+```{r}
+# Calculate total sales for each party
+plr_total_sales <- sum(plr_sales$`2023`)
+ps_total_sales <- sum(ps_sales$`2023`)
+udc_total_sales <- sum(udc_sales$`2023`)
+centre_total_sales <- sum(centre_sales$`2023`)
+verts_total_sales <- sum(verts_sales$`2023`)
+
+# Define colors for each party
+party_colors <- c("PLR" = "blue", "PS" = "red", "UDC" = "darkgreen", "Centre" = "orange", "Verts" = "green")
+
+# Sort the data frame by Total_Sales in descending order
+total_sales_df <- total_sales_df[order(-total_sales_df$Total_Sales), ]
+
+# Plot total sales by party in descending order with specified colors
+ggplot(total_sales_df, aes(x = reorder(Party, -Total_Sales), y = Total_Sales, fill = Party)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Sales by Political Party in 2023", x = "Party", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = party_colors)
+```
+
+We can see that there actually is a lot of sales of lait équitable where PS is present more than 20%
+
 #### Correlating average revenue with Milk Sales
+
+Now, we want to see if there is some correlation between the income per taxpayer of a commune and its sales.
 ```{r}
 # Create a scatterplot
 ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2022`)) +
@@ -383,5 +414,5 @@ ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2023`)) +
   geom_smooth(method = "lm", se = FALSE) +
   theme_minimal()
 ```
-
+Here we can again see that there is no specific correlation, and that the correlation is even negative. We will then move on to our last part where we will try to correlate the sales of lait équitable with the proximity of milk producers.
 
