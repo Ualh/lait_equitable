@@ -312,15 +312,17 @@ party_data_cleaned <- party_data %>%
   mutate(Location = gsub(" ", "", Location)) %>%
   filter(Location %in% sales_data$Location)
 
-# Calculate party presence percentages for each location
+# Update party names to match the new column names
 party_data_cleaned <- party_data_cleaned %>%
-  mutate(PLR_Presence = PLR / (PLR + PS + UDC + Centre + Verts) * 100,
-         PS_Presence = PS / (PLR + PS + UDC + Centre + Verts) * 100,
-         UDC_Presence = UDC / (PLR + PS + UDC + Centre + Verts) * 100,
-         Centre_Presence = Centre / (PLR + PS + UDC + Centre + Verts) * 100,
-         Verts_Presence = Verts / (PLR + PS + UDC + Centre + Verts) * 100)
+  mutate(PLR_Presence = PLR / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100,
+         PS_Presence = PS / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100,
+         UDC_Presence = UDC / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100,
+         Centre_Presence = Centre / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100,
+         Verts_Presence = Verts / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100,
+         Vertliberaux_Presence = Vertliberaux / (PLR + PS + UDC + Centre + Verts + Vertliberaux) * 100) %>%
+  filter(PLR_Presence > 0.2 | PS_Presence > 0.2 | UDC_Presence > 0.2 | Centre_Presence > 0.2 | Verts_Presence > 0.2 | Vertliberaux_Presence > 0.2)
 
-# Merge sales_data with party presence data
+# Merge sales_data with updated party presence data
 merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 ```
 
