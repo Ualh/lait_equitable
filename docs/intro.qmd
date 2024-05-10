@@ -28,6 +28,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.cm import viridis
 from matplotlib.colors import to_hex
+import plotly.express as px
 ```
 
 ## Company Background
