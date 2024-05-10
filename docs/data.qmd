@@ -280,10 +280,12 @@ The 2022 sales data has been aggregated and standardized for each location.
 The merged dataset now shows the total sales per location for both 2022 and 2023.
 This dataset offers a comprehensive view of Lait Equitable's sales dynamics over two consecutive years, highlighting trends and changes in consumer behavior across different locations.
 
-### Political Parties Dataset
+## Political Parties Dataset
 #### Wrangling and Cleaning
 
-explain what you did...
+The analysis starts by importing two datasets: sales data (annual sales of fair trade milk) and political party data (support percentages for major parties by location). The political data is cleaned to match commune names in the sales data and transformed into party presence percentages.
+
+Next, the cleaned political data is merged with the sales data based on commune names. This merged dataset enables a combined analysis of political party presence and sales performance.
 ```{r}
 # Read sales data from Excel
 sales_data <- read_excel("../data/Ventes annuelles.xlsx")

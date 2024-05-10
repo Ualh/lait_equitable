@@ -357,4 +357,5 @@ party_plots <- lapply(names(merged_data)[4:8], function(party) {
 matrix_plot <- gridExtra::grid.arrange(grobs = party_plots, ncol = 2)
 matrix_plot
 ```
+#### Correlating average revenue with Milk Sales
 
