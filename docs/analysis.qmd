@@ -385,3 +385,200 @@ ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2023`)) +
 ```
 
 
+#### Correlating Distance to Producers 
+
+Does being close to a Producer influence Sales ?
+What we do here is to calculate a distance matrix in order to determine the proximity of each city to the producers. We then analyze the correlation between the total sales and the minimum distance to the producer. This analysis helps us understand if the proximity to the producer has any significant impact on the sales of Lait Equitable products.
+
+The distance Matrix is shown as follow : 
+```{python}
+from geopy.distance import geodesic
+latitudes = []
+longitudes = []
+
+# Parse each location and extract latitude and longitude
+for location in locations:
+    lat, lon = location.split(',')
+    latitudes.append(float(lat))
+    longitudes.append(float(lon))
+
+# Create a DataFrame using pandas
+producers = pd.DataFrame({
+    'Latitude': latitudes,
+    'Longitude': longitudes
+})
+
+#get the df from the python code
+cities = df['City']
+
+# Initialize an empty DataFrame to store distances
+distance_matrix = pd.DataFrame(index=cities, columns=[f"Producer {i+1}" for i in range(len(producers))])
+
+# Calculate distances and fill the DataFrame
+for city in cities:
+    city_lat, city_lon = get_lat_lon(city)
+    if city_lat is not None and city_lon is not None:
+        city_coords = (city_lat, city_lon)
+        for index, producer in producers.iterrows():
+            producer_coords = (producer['Latitude'], producer['Longitude'])
+            distance = geodesic(city_coords, producer_coords).kilometers  # distance in kilometers
+            distance_matrix.loc[city, f"Producer {index+1}"] = distance
+            
+
+# Flatten the DataFrame to get all distance values in one series
+all_distances = distance_matrix.values.flatten()
+```
+```{r}
+#get the distance_matrix in r
+distance_matrix <- r.get('distance_matrix')
+
+#use reactable to show the table 
+#show it using reactable
+reactable(
+  distance_matrix,  
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
+We can see here the distribution of distances between cities and producers. The histogram shows the frequency of distances between cities and producers, providing insights into the geographical distribution of producers and their proximity to cities.
+
+
+| Statistic         | Distance     |
+|-------------------|--------------|
+| Minimum Distance  | 0.68 km      |
+| Maximum Distance  | 283.46 km    |
+| Average Distance  | 116.73 km    |
+| Median Distance   | 117.62 km    |
+
+```{python}
+# Basic statistics
+print("Distance Statistics:")
+print("Minimum Distance: {:.2f} km".format(all_distances.min()))
+print("Maximum Distance: {:.2f} km".format(all_distances.max()))
+print("Average Distance: {:.2f} km".format(all_distances.mean()))
+print("Median Distance: {:.2f} km".format(np.median(all_distances)))
+
+# Histogram of the distances
+plt.figure(figsize=(10, 6))
+plt.hist(all_distances, bins=30, color='#24918d', alpha=0.7)
+plt.title('Distribution of Distances Between Cities and Producers')
+plt.xlabel('Distance in km')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
+```
+
+We see that the correlation is non-existent between the total sales and the distance to the producer. This suggests that the proximity to the producer does not significantly influence the sales of Lait Equitable products in the analyzed locations.
+
+| Correlation between Total Sales 2022 and Min Distance to Producer: | Correlation between Total Sales 2023 and Min Distance to Producer: |
+|------------------------------------|------------------------------------|
+| 1.000000                                                           | 0.014807                                                           |
+| 0.014807                                                           | 1.000000 
+```{python}
+df_sales = r.get('df_merged_sales')
+#rename 'Location' column as 'City'
+df_sales.rename(columns={'Location': 'City'}, inplace=True)
+df_sales.set_index('City', inplace=True)
+
+# Calculate the minimum distance for each city and add it to df_sales
+df_sales['Min Distance to Producer'] = distance_matrix.min(axis=1)
+
+# Calculate Pearson correlation
+correlation_2022 = df_sales[['Total Sales 2022', 'Min Distance to Producer']].corr(method='pearson')
+correlation_2023 = df_sales[['Total Sales 2023', 'Min Distance to Producer']].corr(method='pearson')
+
+print("Correlation between Total Sales 2022 and Min Distance to Producer:")
+print(correlation_2022)
+
+print("Correlation between Total Sales 2023 and Min Distance to Producer:")
+print(correlation_2023)
+
+# Convert 'Total Sales 2022' and 'Min Distance to Producer' to numeric types explicitly
+df_sales['Total Sales 2022'] = pd.to_numeric(df_sales['Total Sales 2022'], errors='coerce')
+df_sales['Min Distance to Producer'] = pd.to_numeric(df_sales['Min Distance to Producer'], errors='coerce')
+
+
+# Plotting Total Sales 2022 vs. Min Distance to Producer
+plt.figure(figsize=(10, 6))
+sns.regplot(
+    x='Min Distance to Producer', 
+    y='Total Sales 2022', 
+    data=df_sales,
+    scatter_kws={'s': 50, 'color': '#7e57c2'},  # Customizing the scatter plot points
+    line_kws={'color': '#33848D', 'lw': 2}  # Customizing the regression line
+)
+plt.title('Total Sales 2022 vs. Minimum Distance to Producer')
+plt.xlabel('Minimum Distance to Producer (km)')
+plt.ylabel('Total Sales 2022')
+plt.grid(True)
+plt.show()
+
+# Plot for 2023
+plt.figure(figsize=(10, 6))
+sns.regplot(x='Min Distance to Producer', y='Total Sales 2023', data=df_sales, 
+            scatter_kws={'s': 50, 'color': '#33848D'}, line_kws={'color': '#7e57c2'})
+plt.title('Total Sales 2023 vs. Min Distance to Producer')
+plt.xlabel('Minimum Distance to Producer (km)')
+plt.ylabel('Total Sales 2023')
+plt.grid(True)
+plt.show()
+```
+
+
+#### Diving Deeper
+
+To dive a bit deeper into the insights on how the sales of each manor is influenced, we'll write a Python script using the `pandas` library. The goal is to iterate through each city (column in the distance_matrix DataFrame), find the producer (row) with the minimum distance for that city, and then tally the number of times each producer is the closest to any city. Finally, we'll create a DataFrame to display the number of times each producer was closest to a city.
+
+Here is a step-by-step guide and the corresponding code:
+
+Import the pandas library. Load the data into a DataFrame: We'll assume the data you provided is in a CSV or Excel file. If it's in another format, you can adjust the loading method accordingly. Initialize a DataFrame to keep track of the scores for each producer. Iterate through each column (city) in the distance_matrix_t DataFrame, find the index of the minimum distance, and update the score for the respective producer. Display the final DataFrame with the scores.
+
+```{python}
+# Initialize a DataFrame to store scores for each producer
+scores = pd.DataFrame(0, index=distance_matrix.index, columns=['Score'])
+
+# Iterate through each city (column) to find the producer with the minimum distance
+for city in distance_matrix.columns:
+    min_distance_producer = distance_matrix[city].idxmin()
+    scores.loc[min_distance_producer, 'Score'] += 1
+
+#merges scores with df_sales
+df = df_sales.merge(scores, left_index=True, right_index=True, how='left')
+correlation_matrix = df[['Total Sales 2022', 'Total Sales 2023', 'Score']].corr()
+
+# Display the correlation matrix
+correlation_matrix
+```
+Here is the correlation matrix for the total sales in 2022, total sales in 2023, and the score calculated based on the proximity of each producer to the cities
+
+|                  | Total Sales 2022 | Total Sales 2023 | Score      |
+|------------------|-------------------|-------------------|------------|
+| Total Sales 2022 | 1.000000          | 0.994222          | 0.250883   |
+| Total Sales 2023 | 0.994222          | 1.000000          | 0.268046   |
+| Score            | 0.250883          | 0.268046          | 1.000000   |
+
+
+It is better than the minimum distance correlation, but it is still not very high. This suggests that the proximity of a producer to a city, as measured by the score, has a moderate positive correlation with the total sales in both 2022 and 2023.
+
+
+```{python}
+# Plotting 'Sales 2022' vs 'Score'
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)  # 1 row, 2 columns, 1st subplot
+sns.regplot(x='Total Sales 2022', y='Score', data=df, ci=None, scatter_kws={'color': '#7e57c2'}, line_kws={'color': '#33848D'})
+plt.title('Sales 2022 vs. Score')
+
+# Plotting 'Sales 2023' vs 'Score'
+plt.subplot(1, 2, 2)  # 1 row, 2 columns, 2nd subplot
+sns.regplot(x='Total Sales 2023', y='Score', data=df, ci=None, scatter_kws={'color': '#33848D'}, line_kws={'color': '#7e57c2'})
+plt.title('Sales 2023 vs. Score')
+
+# Show the plots
+plt.tight_layout()
+plt.show()
+```
