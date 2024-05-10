@@ -344,6 +344,7 @@ top_performing_stores
 
 #### Correlating Political Parties with Milk Sales
 
+Here, we will then make a scatterplot to identify if there is any correlation between any political party and sales of lait equitable. Our aim is to show that there might be a link with milk sales and a certain political party: are the sales correlated to a certain party presence?
 ```{r}
 # Calculate correlation coefficients for each party
 correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
@@ -383,6 +384,4 @@ ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2023`)) +
   theme_minimal()
 ```
 
-
-#### Correlating average revenue with Milk Sales
 
