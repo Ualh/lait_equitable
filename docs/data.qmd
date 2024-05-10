@@ -324,6 +324,24 @@ party_data_cleaned <- party_data_cleaned %>%
 merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 ```
 
+The analysis starts by importing one other dataset: revenue per capita per commune data. The revenue data is cleaned to match commune names in the sales data.
+
+Next, the cleaned revenue data is merged with the sales data based on commune names. This merged dataset enables a combined analysis of revenue per capita per commune and sales performance.
+
+```{r}
+# Load the datasets
+revenu_df <- read_excel("revenuParContribuable_CommuneManor.xlsx")
+ventes_df <- read_excel("Ventes annuelles.xlsx")
+
+# Merge the datasets on the "Location" column
+merged_df <- inner_join(revenu_df, ventes_df, by = "Location")
+
+# Clean the data and convert to numeric format
+merged_df$`Revenu/contribuable` <- as.numeric(gsub(" ", "", merged_df$`Revenu/contribuable`))
+merged_df$`2022` <- as.numeric(gsub(" ", "", merged_df$`2022`))
+merged_df$`2023` <- as.numeric(gsub(" ", "", merged_df$`2023`))
+```
+
 #### Description
 
 Write kableextra to describe the dataset here

@@ -358,4 +358,18 @@ matrix_plot <- gridExtra::grid.arrange(grobs = party_plots, ncol = 2)
 matrix_plot
 ```
 #### Correlating average revenue with Milk Sales
+```{r}
+# Create a scatterplot
+ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2022`)) +
+  geom_point(aes(color = Location)) +
+  labs(x = "Revenu/contribuable", y = "Sales 2022", title = "Relationship between Revenu/contribuable and Sales in 2022") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
 
+# Create another scatterplot for 2023
+ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2023`)) +
+  geom_point(aes(color = Location)) +
+  labs(x = "Revenu/contribuable", y = "Sales 2023", title = "Relationship between Revenu/contribuable and Sales in 2023") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+```
