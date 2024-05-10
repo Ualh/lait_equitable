@@ -154,8 +154,30 @@ df_merged_sales %>%
 -   **Monthey's Decline**: The bar chart shows that Monthey experienced a substantial decrease in sales in 2023 compared to 2022. This would be a key point of concern for Lait Equitable, and understanding why Monthey is underperforming is essential. This could be due to a range of factors, such as local economic conditions, operational challenges, increased competition, or changes in consumer preference within that particular area.
 
 ### Map
+```{python producer_map}
+import re
+locations = [
+      "46.5907889,6.7386114","46.5842792,6.6649234","46.5149217,6.888093","46.5366608,6.7054361","46.2962374,6.9946778","46.5575317,6.7491415","46.5407979,6.7757944","46.5732277,6.7334704","46.6179705,6.6729034","46.4438248,6.9216581","46.5244929,6.7652973","46.5535214,6.7766663","46.9087674,7.0772625","46.5072978,6.7303043","46.7658972,6.5635194","46.4890932,6.839986","46.5343528,6.7394634","46.6558216,6.7369549","46.5156779,6.8621498","46.6112911,6.8073595","46.6666946,6.8991534","46.7395322,6.9715464","46.6468967,6.9540885","46.5153462,6.8584537","46.5975359,7.0382028","46.595883,6.8855935","46.6612814,6.8782794","46.7087666,7.1239746","46.6510812,6.9711981","46.6141324,7.0318659","46.601508,7.1001934","46.6091436,7.0307497","46.5766179,6.8634981","46.5954987,6.9855279","46.829064,6.9264143","46.6588489,6.8758917","46.6124961,6.9757718","47.2915521,7.3217577","47.2775379,7.3830611","47.1202632,6.8834564","47.2786229,7.3611541","47.270679,7.39172","47.3439771,7.4949095","47.3276332,7.218765","47.3660465,7.4060015","47.3649491,7.46977","47.2032746,6.9890961","47.2092332,7.0068912","46.3260628,6.9042257","46.2126721,6.9985419","46.1163846,7.112862","46.3649142,6.8995776","46.9232972,6.4673148","47.0769951,6.756922","46.0377232,8.8837298","46.1646151,8.9659276","46.1292513,8.985035","46.0029796,8.8540675","46.4694663,8.9413945","46.1460954,8.9345517","47.3859362,7.4313549","47.4475168,7.5593599","47.3809253,7.4221544","47.4364108,9.3341963","47.4304657,9.3321608","47.4341264,9.3481821","47.4345287,9.3262813","47.426417,9.3338866","47.4652773,9.1518866","47.2749047,9.5092842","47.1135124,9.1297439","47.404214,9.3419733","47.5295845,8.4670763","47.1738126,8.3342979","47.08052,8.2031428","47.2351478,8.1477158","46.7883954,7.4004079","47.0364909,7.2786631","46.8364949,7.7665098","46.7833635,7.3912478"]
 
-```{python}
+latitudes = []
+longitudes = []
+
+# Parse each location and extract latitude and longitude
+for location in locations:
+    lat, lon = location.split(',')
+    latitudes.append(float(lat))
+    longitudes.append(float(lon))
+
+# Create a DataFrame using pandas
+data = pd.DataFrame({
+    'Latitude': latitudes,
+    'Longitude': longitudes
+})
+
+data
+```
+
+```{python map}
 # Function to calculate the dynamic radius
 def calculate_radius(volume, max_volume, min_volume, max_radius=20):
     normalized_volume = (volume - min_volume) / (max_volume - min_volume)
@@ -252,6 +274,11 @@ for category, (file_path, sheet_name) in file_paths.items():
             ).add_to(fg)
 
     fg.add_to(m)
+
+heat_data = [[float(lat), float(lon)] for loc in locations for lat, lon in [loc.split(',')]]
+
+# Add HeatMap layer
+HeatMap(heat_data).add_to(m)
 
 # Add layer control and save the map
 folium.LayerControl().add_to(m)

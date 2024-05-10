@@ -16,6 +16,7 @@ library(forecast)
 import os
 import pandas as pd
 import folium
+from folium.plugins import HeatMap
 from geopy.geocoders import Nominatim
 import time
 import pyxlsb
