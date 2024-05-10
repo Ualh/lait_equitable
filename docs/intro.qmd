@@ -31,15 +31,18 @@ from matplotlib.colors import to_hex
 
 ## Company Background
 
-Lait Equitable, also known as Fair Milk, is a Swiss initiative aimed at providing fair compensation to milk producers, ensuring they receive a price that covers production costs, specifically 1 CHF per liter of milk. This initiative emerged in response to the challenging conditions facing Swiss dairy production, including plummeting milk prices that do not cover production costs. Through the cooperative "Lait Equitable," the initiative collects, processes, and distributes milk to various sales points, ensuring producers receive fair compensation.
+Lait Equitable, also known as Fair Milk, is a transformative Swiss initiative designed to ensure fair compensation for dairy producers across Switzerland. Founded in response to a prolonged crisis in the dairy industry, Lait Equitable aims to address the substantial disparity between the cost of milk production and the compensation received by producers. Historically, the plummeting prices of milk have often failed to cover production costs, leading to financial stress among producers. The cooperative structure of Lait Equitable ensures that each liter of milk is sold for 1 CHF, aligning closely with the actual production cost of approximately 98 cents per liter as estimated by Agridea in 2016.
 
 Key Points:
 
--   Foundation: Addressing the dire situation of milk producers in Switzerland due to inadequate compensation.
--   Operation: Via the "Lait Equitable" cooperative, ensuring fair pay of 1 CHF per liter to producers.
--   Product Range: Includes milk and possibly other dairy products found in retail stores under the Faireswiss brand.
--   Membership: Open to all Swiss milk producers, including those specializing in cheese production, e.g., Gruyère.
+- Foundation: Lait Equitable was established to counteract the severe financial difficulties faced by Swiss milk producers due to inadequate compensation for their products. This initiative emerged as a critical response to the drastic reduction in the number of operational dairy farms, which saw a decline from about 44,000 producers 25 years ago to 17,164 by the end of 2023.
+- Operation: The initiative operates through the "Lait Equitable" cooperative. This entity is responsible for collecting, processing, and distributing milk, ensuring that producers receive fair compensation. It is noteworthy that while the cooperative guarantees 1 CHF per liter, the actual market price often falls significantly below this, making the cooperative's top-up essential for fair compensation.
+- Product Range: Under the brand Faireswiss, Lait Equitable offers a range of dairy products available at various retail outlets. While the milk in Faireswiss products may not always directly come from the cooperative members due to logistical reasons, the fair compensation model remains intact.
+- Membership: The cooperative is inclusive, welcoming all Swiss milk producers, including those involved in specialty products like Gruyère cheese. While the cooperative initially included cheese producers, decisions made in recent general assemblies have temporarily restricted this inclusion, subject to future reassessment.
 
+This initiative not only supports the livelihood of local farmers but also forms part of a broader European movement towards fair milk pricing, coordinated by the European Milk Board (EMB). Lait Equitable serves as a beacon of hope and a model for sustainable agricultural practices in the dairy industry, ensuring producers can live off their work dignifiedly.
+
+Source - [faireswiss.ch](https://www.faireswiss.ch/fr/lait-equitable)
 ## Related Work
 
 ## Research questions
