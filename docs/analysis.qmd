@@ -6,6 +6,7 @@
 -   Justifications
 
 ## Forecasting Next Year Milk Prices
+
 ```{r}
 # re-arragen the df_producteur data in ascending order
 df_producteur <- df_producteur[order(df_producteur$date),]
@@ -20,6 +21,7 @@ df_producteur_ts_bio <- as_tsibble(df_producteur_ts_bio)
 ```
 
 ### Naive Forecast
+
 ```{r}
 # Fit a naive model
 fit_non_bio <- df_producteur_ts_non_bio %>% model(naive = NAIVE(value))
@@ -42,10 +44,13 @@ plot <- naive_forecast_bio %>%
        y = "Price") + guides(colour = guide_legend(title = "Forecast"))
 plot
 ```
+
 We observe that this model is very vague because is just a naive model that assumes that the next value will be the same as the last value. But it gives us a starting point to compare with other models.
 
 ### ARIMA Model
+
 #### Stationarity
+
 ```{r}
 # re-arragen the df_producteur data in ascending order
 df_producteur <- df_producteur[order(df_producteur$date),]
@@ -57,16 +62,16 @@ df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=
 adf.test(df_producteur_ts_non_bio)
 adf.test(df_producteur_ts_bio)
 ```
-We analyse the stationarity of the time series data for both organic and non-organic milk prices using the Augmented Dickey-Fuller (ADF) test. 
-The Augmented Dickey-Fuller (ADF) test is commonly used to determine whether a unit root is present in a time series dataset. A unit root suggests that a time series is non-stationary, meaning its statistical properties such as mean and variance change over time. On the other hand, if the null hypothesis of the ADF test is rejected, it indicates that the time series is stationary.
 
-We do that because ARIMA models require the time series data to be stationary. 
+We analyse the stationarity of the time series data for both organic and non-organic milk prices using the Augmented Dickey-Fuller (ADF) test. The Augmented Dickey-Fuller (ADF) test is commonly used to determine whether a unit root is present in a time series dataset. A unit root suggests that a time series is non-stationary, meaning its statistical properties such as mean and variance change over time. On the other hand, if the null hypothesis of the ADF test is rejected, it indicates that the time series is stationary.
+
+We do that because ARIMA models require the time series data to be stationary.
 
 The results of the ADF test for both time series `df_producteur_ts_non_bio` and `df_producteur_ts_bio` indicate:
 
-- Dickey-Fuller statistic value of -3
-- Lag order of 4
-- p-value of 0.08
+-   Dickey-Fuller statistic value of -3
+-   Lag order of 4
+-   p-value of 0.08
 
 Solely based on the p-values provided (0.08), we cannot conclusively determine whether the time series data df_producteur_ts_non_bio and df_producteur_ts_bio are stationary or not. They might be stationary, but further analysis or additional tests might be needed for a more definitive conclusion.
 
@@ -88,9 +93,9 @@ adf.test(df_producteur_ts_bio_diff)
 
 The results of the ADF test for both differenced time series indicate:
 
-- Dickey-Fuller statistic value of -6
-- Lag order of 4
-- p-value of 0.01
+-   Dickey-Fuller statistic value of -6
+-   Lag order of 4
+-   p-value of 0.01
 
 In this case, the p-value is smaller than the typical significance level of 0.05, indicating strong evidence against the null hypothesis. Therefore, based on the p-values provided (0.01), we can conclude that the differenced time series data are likely stationary.
 
@@ -134,14 +139,18 @@ forecast_bio_sarima <- forecast(fit_bio_sarima, h = 12)
 autoplot(forecast_non_bio_sarima) + labs(title = "Forecasted Prices of Non-Organic Milk (SARIMA)")
 autoplot(forecast_bio_sarima) + labs(title = "Forecasted Prices of Organic Milk (SARIMA)")
 ```
+
 #### Compare ARIMA and SARIMA forecast
+
 ##### Organic Milk SARIMA vs ARIMA
+
 ```{r}
 # compare forecast_bio vs forecast_bio_sarima Model using AIC
 
 ```
 
 ##### Non-Organic Milk SARIMA vs ARIMA
+
 ```{r}
 # compare forecast_non_bio vs forecast_non_bio_sarima using AIC
 
@@ -180,6 +189,7 @@ forecast_table_arima %>%
        color = "Type") +
   theme_minimal()
 ```
+
 We used the mean values of the forecasted prices for both organic and non-organic milk to create a table and plot the forecasted prices for the next 12 months. The table provides a detailed view of the forecasted prices, while the plot visualizes the trend of the forecasted prices over time.
 
 #### Forecasted Prices SARIMA
@@ -258,7 +268,6 @@ forecast_table_ets %>%
 
 ```
 
-
 ## Lait Equitable Analysis
 
 ### Pareto Principle
@@ -267,17 +276,13 @@ The Pareto Principle, often known as the 80/20 rule, asserts that a small propor
 
 Evidence from Research:
 
-Sales and Customer Concentration: Research has consistently shown that a significant portion of sales often comes from a minority of customers or products. For instance, an analysis across 22 different consumer packaged goods categories found an average Pareto ratio (PR) of .73, indicating that the top proportion of products/customers often account for a disproportionately high share of sales or profits 
-Source - [Kim, Singh, & Winer, 2017](https://doi.org/10.1007/S11002-017-9442-5)
+Sales and Customer Concentration: Research has consistently shown that a significant portion of sales often comes from a minority of customers or products. For instance, an analysis across 22 different consumer packaged goods categories found an average Pareto ratio (PR) of .73, indicating that the top proportion of products/customers often account for a disproportionately high share of sales or profits Source - [Kim, Singh, & Winer, 2017](https://doi.org/10.1007/S11002-017-9442-5)
 
-Decision Making and Resource Allocation: The Pareto Principle helps in decision-making by highlighting areas where the greatest impact can be achieved. For example, focusing on the top-performing products or customers can optimize resource allocation and maximize profits 
-Source - [Ivančić, 2014](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2841896)
+Decision Making and Resource Allocation: The Pareto Principle helps in decision-making by highlighting areas where the greatest impact can be achieved. For example, focusing on the top-performing products or customers can optimize resource allocation and maximize profits Source - [Ivančić, 2014](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2841896)
 
-Market and Profit Concentration: Another study noted that a small number of customers are often responsible for a large portion of sales, which supports the strategic focus on these customers to boost profitability and efficiency 
-Source- [McCarthy & Winer, 2018](https://doi.org/10.2139/ssrn.3264425)
+Market and Profit Concentration: Another study noted that a small number of customers are often responsible for a large portion of sales, which supports the strategic focus on these customers to boost profitability and efficiency Source- [McCarthy & Winer, 2018](https://doi.org/10.2139/ssrn.3264425)
 
-Conclusion:
-Applying the Pareto Principle in a business context where a minority of sales drives the majority of revenue can lead to more focused and effective business strategies, optimizing efforts towards the most profitable segments. This approach not only simplifies decision-making but also enhances resource allocation, ultimately leading to increased profitability.
+Conclusion: Applying the Pareto Principle in a business context where a minority of sales drives the majority of revenue can lead to more focused and effective business strategies, optimizing efforts towards the most profitable segments. This approach not only simplifies decision-making but also enhances resource allocation, ultimately leading to increased profitability.
 
 #### Steps
 
@@ -317,6 +322,7 @@ plt.legend()
 plt.grid(True)
 plt.show()
 ```
+
 Given this graph 33.2% of Manor locations are contributing to 80% of sales. This deviates from the typical Pareto 80/20 distribution, but it still shows a concentration of sales among a subset of stores.
 
 #### Observations
@@ -324,6 +330,7 @@ Given this graph 33.2% of Manor locations are contributing to 80% of sales. This
 We will identify the top 33.3% of locations based on their cumulative sales contribution. This means selecting the smallest number of locations that together account for at least 80% of the total sales.
 
 The top-performing 33.3% of Manor locations that contribute to the majority of sales are:
+
 ```{python}
 # Calculate the threshold for the top 33.3% of locations
 top_third_index = int(len(pareto_data) * 0.34)
@@ -336,6 +343,7 @@ top_performing_stores
 ### Understanding Success Factors of Top-Performing Stores
 
 #### Correlating Political Parties with Milk Sales
+
 ```{r}
 # Calculate correlation coefficients for each party
 correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
@@ -357,5 +365,5 @@ party_plots <- lapply(names(merged_data)[4:8], function(party) {
 matrix_plot <- gridExtra::grid.arrange(grobs = party_plots, ncol = 2)
 matrix_plot
 ```
-#### Correlating average revenue with Milk Sales
 
+#### Correlating average revenue with Milk Sales
