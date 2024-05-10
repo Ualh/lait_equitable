@@ -100,8 +100,8 @@ This suggests that after differencing, the time series data df_producteur_ts_non
 
 ```{r}
 # Fit the ARIMA model
-fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = TRUE)
-fit_bio <- auto.arima(df_producteur_ts_bio, seasonal = TRUE)
+fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = FALSE)
+fit_bio <- auto.arima(df_producteur_ts_bio, seasonal = FALSE)
 
 # Forecast the next 12 months
 forecast_non_bio <- forecast(fit_non_bio, h = 12)

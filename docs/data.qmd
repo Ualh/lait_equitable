@@ -1,16 +1,17 @@
 # Data
 
-* Sources
-* Description
-* Wrangling/cleaning
-* Spotting mistakes and missing data (could be part of EDA too)
-* Listing anomalies and outliers (could be part of EDA too)
+-   Sources
+-   Description
+-   Wrangling/cleaning
+-   Spotting mistakes and missing data (could be part of EDA too)
+-   Listing anomalies and outliers (could be part of EDA too)
 
 ## Swiss Producer
 
-IMPLEMENTER EMELINE PART 
+IMPLEMENTER EMELINE PART
 
 ### Wrangling and Cleaning
+
 ```{r}
 library(data.table)
 
@@ -40,9 +41,11 @@ variable_table %>%
 ```
 
 ### Description
+
 This data set explains the Milk price to producers over time. Essential for Macro Anaylsis of the milk industry in Switzerland.
 
-Have a look : 
+Have a look :
+
 ```{r}
 # create a new data cleaned
 df_producteur_show <- df_producteur %>%
@@ -70,10 +73,13 @@ reactable(
   resizable = TRUE  # Allow column resizing
 )
 ```
+
 Source - [asjdaksjdh](https://www.agridea.ch/fr/themes/production-animaliere/bovins/lait-cru/)
 
-## Lait Equitable Sales 
+## Lait Equitable Sales
+
 ### Dataset Sales 2023
+
 #### Wrangling and Cleaning
 
 ```{python}
@@ -115,11 +121,11 @@ df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x)
 The dataset from 2023 was meticulously cleaned and standardized to ensure accuracy in our analysis. Initial steps included loading the data from an Excel file and renaming columns to reflect clearer, month-specific sales data for easier readability. Additionally, we corrected city names to maintain consistency across datasets. This included mapping various forms of city names to their standardized counterparts (e.g., 'Bâle' to 'Basel').
 
 #### Description
-The dataset is very light and only contains the sales data for the year 2023. It is essential however for the analysis of the sales of Lait Equitable in different Manor stores.
 
-The dataset contains monthly sales data from different Manor store locations for the year 2023. 
+The dataset is very light and contains monthly sales data for the year 2023. It is essential however for the analysis of the sales of Lait Equitable in different Manor stores.
 
 Here is a preview of the cleaned and structured data:
+
 ```{r warning=FALSE, message=FALSE}
 #load python df
 df_sales_2023 <- py$df
@@ -165,8 +171,11 @@ reactable(
 ```
 
 ### Dataset Sales 2022
+
 #### Wrangling and Cleaning
+
 Following the methodology established with the 2023 dataset, the 2022 sales data was similarly processed. The data from 2022, while structurally different, was also standardized to facilitate comparison and analysis. This included renaming columns to ensure uniformity in location names across both datasets.
+
 ```{python}
 # Load the data for 2022
 file_path_2022 = '../data/sales_2022.xlsx'
@@ -194,7 +203,9 @@ df_2022_total_sales.columns = ['Location', 'Total Sales 2022']
 ```
 
 #### Description
+
 The 2022 dataset, unlike the 2023 dataset, includes a variety of products, each recorded with sales figures across different locations. This dataset is notably less complex, focusing on total sales rather than monthly breakdowns, yet provides critical insights into the sales performance of different products.
+
 ```{r}
 # Load the 2022 sales data
 df_sales_2022 <- py$df_2022
@@ -223,6 +234,7 @@ variable_table %>%
 ```
 
 Here is a closer look at the structured 2022 sales data:
+
 ```{r}
 library(dplyr)
 library(reactable)
@@ -251,6 +263,7 @@ reactable(
 ```
 
 #### Merging 2022 and 2023 dataset
+
 ```{python}
 # Extracting the total sales for 2023 from the first dataset
 df_2023_total_sales = df[['Row Labels', 'Grand Total']].rename(columns={'Row Labels': 'Location', 'Grand Total': 'Total Sales 2023'})
@@ -261,6 +274,7 @@ merged_sales_data = pd.merge(df_2022_total_sales, df_2023_total_sales, on='Locat
 # Filling any NaN values that might have occurred due to locations present in one dataset and not the other
 merged_sales_data.fillna(0, inplace=True)
 ```
+
 ```{r}
 # Load the merged sales data
 df_merged_sales <- py$merged_sales_data
@@ -276,14 +290,14 @@ reactable(
 )
 ```
 
-The 2022 sales data has been aggregated and standardized for each location.
-The merged dataset now shows the total sales per location for both 2022 and 2023.
-This dataset offers a comprehensive view of Lait Equitable's sales dynamics over two consecutive years, highlighting trends and changes in consumer behavior across different locations.
+The 2022 sales data has been aggregated and standardized for each location. The merged dataset now shows the total sales per location for both 2022 and 2023. This dataset offers a comprehensive view of Lait Equitable's sales dynamics over two consecutive years, highlighting trends and changes in consumer behavior across different locations.
 
 ### Political Parties Dataset
+
 #### Wrangling and Cleaning
 
 explain what you did...
+
 ```{r}
 # Read sales data from Excel
 sales_data <- read_excel("../data/Ventes annuelles.xlsx")
@@ -311,6 +325,7 @@ merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 #### Description
 
 Write kableextra to describe the dataset here
+
 ```{r}
 
 ```
