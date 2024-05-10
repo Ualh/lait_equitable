@@ -296,7 +296,9 @@ The 2022 sales data has been aggregated and standardized for each location. The 
 
 #### Wrangling and Cleaning
 
-explain what you did...
+The analysis starts by importing two datasets: sales data (annual sales of fair trade milk) and political party data (support percentages for major parties by location). The political data is cleaned to match commune names in the sales data and transformed into party presence percentages.
+
+Next, the cleaned political data is merged with the sales data based on commune names. This merged dataset enables a combined analysis of political party presence and sales performance.
 
 ```{r}
 # Read sales data from Excel
