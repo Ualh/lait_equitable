@@ -2,14 +2,6 @@
 
 ```{r, echo = FALSE, message = FALSE}
 source(here::here("scripts/setup.R"))
-library(viridis)
-library(fpp3)
-library(tsibbledata)
-library(flextable)
-library(readxl)
-library(patchwork)
-library(tseries)
-library(forecast)
 ```
 
 ```{python, echo = FALSE, message = FALSE}
