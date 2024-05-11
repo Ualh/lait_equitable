@@ -424,6 +424,11 @@ udc_total_sales <- sum(udc_sales$`2023`)
 centre_total_sales <- sum(centre_sales$`2023`)
 verts_total_sales <- sum(verts_sales$`2023`)
 
+# Create a data frame for total sales by party
+total_sales_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts", "Vertliberaux"),
+                             Total_Sales = c(plr_total_sales, ps_total_sales, udc_total_sales,
+                                             centre_total_sales, verts_total_sales, vertliberaux_total_sales))
+
 # Define colors for each party
 party_colors <- c("PLR" = "blue", "PS" = "red", "UDC" = "darkgreen", "Centre" = "orange", "Verts" = "green")
 
