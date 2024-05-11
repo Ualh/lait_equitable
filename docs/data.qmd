@@ -333,10 +333,9 @@ Next, the cleaned revenue data is merged with the sales data based on commune na
 ```{r}
 # Load the datasets
 revenu_df <- read_excel("../data/revenuParContribuable_CommuneManor.xlsx")
-ventes_df <- read_excel("../data/Ventes annuelles.xlsx")
 
 # Merge the datasets on the "Location" column
-merged_df <- inner_join(revenu_df, ventes_df, by = "Location")
+merged_df <- inner_join(revenu_df, sales_data, by = "Location")
 
 # Clean the data and convert to numeric format
 merged_df$`Revenu/contribuable` <- as.numeric(gsub(" ", "", merged_df$`Revenu/contribuable`))

@@ -373,12 +373,9 @@ We will therefore proceed to select only the Locations where a political party h
 
 ```{r}
 
-# Read sales data from Excel
-sales_data <- read_excel("Ventes annuelles.xlsx") %>%
+# Read sales data from data.qmd
+sales_data_2023 <- sales_data %>%
   select(-`2022`)
-
-# Read political party data from Excel
-party_data <- read_excel("partisPolitiqueManor.xlsx")
 
 # Filter party data to keep only values above 20
 filtered_party_data <- party_data %>%
@@ -410,12 +407,12 @@ vertliberaux_data <- filtered_party_data %>%
   select(Location, Vertliberaux)
 
 # Merge each party's data with sales data for 2023
-plr_sales <- merge(sales_data, plr_data, by.x = "Location")
-ps_sales <- merge(sales_data, ps_data, by.x = "Location")
-udc_sales <- merge(sales_data, udc_data, by.x = "Location")
-centre_sales <- merge(sales_data, centre_data, by.x = "Location")
-verts_sales <- merge(sales_data, verts_data, by.x = "Location")
-vertliberaux_sales <- merge(sales_data, vertliberaux_data, by.x = "Location")
+plr_sales <- merge(sales_data_2023, plr_data, by.x = "Location")
+ps_sales <- merge(sales_data_2023, ps_data, by.x = "Location")
+udc_sales <- merge(sales_data_2023, udc_data, by.x = "Location")
+centre_sales <- merge(sales_data_2023, centre_data, by.x = "Location")
+verts_sales <- merge(sales_data_2023, verts_data, by.x = "Location")
+vertliberaux_sales <- merge(sales_data_2023, vertliberaux_data, by.x = "Location")
 
 # Calculate total sales for each party
 plr_total_sales <- sum(plr_sales$`2023`)
@@ -425,9 +422,9 @@ centre_total_sales <- sum(centre_sales$`2023`)
 verts_total_sales <- sum(verts_sales$`2023`)
 
 # Create a data frame for total sales by party
-total_sales_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts", "Vertliberaux"),
+total_sales_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
                              Total_Sales = c(plr_total_sales, ps_total_sales, udc_total_sales,
-                                             centre_total_sales, verts_total_sales, vertliberaux_total_sales))
+                                             centre_total_sales, verts_total_sales))
 
 # Define colors for each party
 party_colors <- c("PLR" = "blue", "PS" = "red", "UDC" = "darkgreen", "Centre" = "orange", "Verts" = "green")
