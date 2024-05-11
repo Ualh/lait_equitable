@@ -506,9 +506,10 @@ for city in cities:
 # Flatten the DataFrame to get all distance values in one series
 all_distances = distance_matrix.values.flatten()
 ```
+
 ```{r}
 #get the distance_matrix in r
-distance_matrix <- r.get('distance_matrix')
+distance_matrix <- py$distance_matrix
 
 #use reactable to show the table 
 #show it using reactable
