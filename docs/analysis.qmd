@@ -374,11 +374,11 @@ We will therefore proceed to select only the Locations where a political party h
 ```{r}
 
 # Read sales data from Excel
-sales_data <- read_excel("Ventes annuelles.xlsx") %>%
+sales_data <- read_excel("../data/Ventes annuelles.xlsx") %>%
   select(-`2022`)
 
 # Read political party data from Excel
-party_data <- read_excel("partisPolitiqueManor.xlsx")
+party_data <- read_excel("../data/partisPolitiqueManor.xlsx")
 
 # Filter party data to keep only values above 20
 filtered_party_data <- party_data %>%
