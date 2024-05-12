@@ -1,8 +1,300 @@
-# Exploratory data analysis
+### Exploratory data analysis
+## Description
 
-EMELINE EDA
+```{python}
+# import data
+data = pd.read_csv('../data/Données_marché_Lait.csv')
+print('Dataset length:', len(data))
+data.head()
 
-## Lait Equitable Products
+# Check the number of unique values in each column
+data.nunique()
+```
+This data set shows the price of organic and conventional milk production from Switzerland and other countries over time.
+Source - https://www.donnees-agrimarche.ch/donnees
+
+## Wrangling and Cleaning 
+
+We start by removing the columns with no value or unique value given that they are not relevant for our analysis. 
+After proceeding, we end up with a sub-data set of 9 variables.
+Then, we calculate the number of missing values for each characteristics and filter out those without.
+
+```{python}
+clean_data = data.copy()
+
+# Drop columns with unique values 
+clean_data = clean_data.drop(['Devise', 'Groupe de produits', 'Commerce extérieur', 'Indicateur',\
+                   'Marché', 'Propriétés du produit', 'Unité', 'Echelon de création de valeur '], axis=1)
+
+# Calculate the number of NaN for each column and filter out those without NaN
+nan_counts = clean_data.isna().sum()
+nan_counts = nan_counts[nan_counts > 0]
+print(nan_counts)
+
+# Create a barplot
+plt.figure(figsize=(10, 6))
+sns.barplot(x=nan_counts.index, y=nan_counts.values)
+plt.title('Nombre de valeurs manquantes par colonne')
+plt.xlabel('Colonnes')
+plt.ylabel('Nombre de NaN')
+
+plt.show()
+
+# Calculate the percentage of NaN for each column of this cleaned data set 
+nan_percent = clean_data.isna().mean() * 100
+
+# Filter to keep only columns with NaN
+nan_percent = nan_percent[nan_percent > 0].reset_index()
+nan_percent.columns = ['Colonne', 'Pourcentage de NaN']
+
+# Create an interactive graph with Plotly
+fig = px.bar(nan_percent, x='Colonne', y='Pourcentage de NaN',
+             text='Pourcentage de NaN')
+
+fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+fig.update_yaxes(range=[0, 100])
+fig.update_layout(title_text='Pourcentage de valeurs manquantes par colonne',
+                  yaxis_title='Pourcentage de NaN',
+                  xaxis_title='Colonne')
+fig.show()
+```
+The columns with missing values are: Cost components, Production system, Sales region and Use mode.
+The 'Production system' variable has a higher percentage of missing values, around 37.6%. However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity. 
+As for the other characteristics, their percentage of missing values is relatively low thus we keep them too.
+
+## General Analysis - All Countries
+# Milk Production by country 
+
+The milk sold in Switzerland comes from 14 different places - 14 values in 'Origin of product'. It would be interesting to see the distribution of the origin of milk in Switzerland, with the percentage of milk coming from Switzerland and the percentage of milk not coming from Switzerland.
+We create a new variable 'swiss_production_data' including all five Swiss regions. Then, we group all non-Swiss origins together in another category. This gives us:
+
+```{python}
+# create a new variable including all Swiss regions
+swiss_production_data = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'] 
+
+# Create a new column for classification
+clean_data['Provenance'] = clean_data['Provenance du produit'].apply(lambda x: 'Suisse' if x in swiss_production_data else 'Etranger')
+
+# Calculate percentage for both categories
+category_counts = clean_data['Provenance'].value_counts(normalize=True) * 100
+
+# Plot the distribution
+plt.figure(figsize=(8, 4))
+plt.bar(category_counts.index, category_counts.values, color=['blue', 'red'])
+plt.xlabel('Origin')
+plt.ylabel('Percentage (%)')
+plt.title('Distribution between Swiss and foreign milk')
+plt.ylim(0, 100)  
+plt.show()
+
+print(category_counts)
+```
+
+The histogram shows a higher percentage of milk comes from Switzerland than from imports. However the difference is small, less than 10%.
+This suggests that there are not many Swiss producers in comparison to the population.
+
+# Milk Price by country 
+
+Now that we've compared the distribution of production, we'll compare the distribution of the price of milk by country.
+
+```{python}
+# Convert date from string to datetime
+clean_data['Date'] = pd.to_datetime(clean_data['Date'])
+
+# Replace the country names with 'Group'
+clean_data['Provenance du produit'] = clean_data['Provenance du produit'].replace(swiss_production_data, 'Suisse')
+
+# Group the data by 'Origin of product' & 'Date' and calculate the average price. 
+prix_moyen_par_pays_et_annee = clean_data.groupby(['Provenance du produit', 'Date'])['Prix'].mean().reset_index()
+
+# Plot
+plt.figure(figsize=(12, 6))
+# Loop over each country to trace it
+for pays in prix_moyen_par_pays_et_annee['Provenance du produit'].unique():
+    subset = prix_moyen_par_pays_et_annee[prix_moyen_par_pays_et_annee['Provenance du produit'] == pays]
+    plt.plot(subset['Date'], subset['Prix'], label=pays)
+    
+plt.legend()
+plt.title('Average milk production price by country and year')
+plt.xlabel('Year')
+plt.ylabel('Average milk production price')
+plt.legend(title='Origin', bbox_to_anchor=(1.05, 1), loc='upper left')
+plt.xticks(rotation=45)
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+
+plt.gca().xaxis.set_major_locator(mdates.YearLocator()) 
+plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y')) 
+
+plt.tight_layout()  
+plt.show()
+```
+We observe from this plot that producing milk in Switzerland is much more expensive than in other countries.
+
+### Univariate Analysis - Switzerland
+
+The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration. 
+To do this, we are going to use the variable 'swiss_production_data' which includes all the Swiss production and sales regions.
+
+## Distribution of milk production for each Swiss region.
+
+```{python}
+# Count the occurrences of each type of product
+product_counts = swiss_production_data['Provenance du produit'].value_counts()
+
+# Define the desired order of regions
+order = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']
+
+# Re-index the data in the desired order
+product_counts = product_counts.reindex(order)
+
+# Create a bar chart
+plt.figure(figsize=(10, 6))
+bars = plt.bar(product_counts.index, product_counts.values, color=['red', 'green', 'blue', 'orange', 'purple'])
+
+# Detailed descriptions for each region 
+labels = ['Région 1 : Genève, Vaud, Fribourg, Neuchâtel, Jura', 
+          'Région 2 : Berne, Lucerne, Unterwald, Uri, Zoug and Schwyz', 
+          'Région 3 : Bâle-Campagne & Bâle-Ville, Argovie and Soleure.',
+          'Région 4 : Zurich, Schaffhouse, Thurgovie, Appenzell, St.-Gall, Schwyz, Glaris and Grisons',
+          'Région 5 : Valais and Tessin.']
+
+for bar, label in zip(bars, labels):
+    bar.set_label(label)
+    
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+plt.title('Distribution de la production de lait en Suisse')
+plt.xlabel('Provenance du lait')
+plt.ylabel('Nombre d’Occurrences')
+plt.show()
+print(product_counts)
+```
+
+We can see that regions 1, 2 and 4 produce a greater quantity of milk than regions 3 and 5.  Créer un tableau affichant les composantes des régions suisses.
+
+## Cost of production 
+
+Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
+
+```{python}
+swiss_histogram = pd.read_csv('Swiss_Production.csv')
+
+# plot distribution of the cost of production, all regions combined.
+plt.hist(swiss_histogram['Prix'], bins=50, density=True, alpha=0.5)
+plt.xlabel('Price in centimes')
+plt.ylabel('Density')
+plt.title('Distribution of the cost of production in Switzerland')
+plt.show()
+```
+
+Regions 5 and 1 are more expensive than other regions. Region 3 has the lowest price in Switzerland.
+In order to explain this difference in density between the different regions, we are going to make a boxplot with the five regions.
+
+```{python}
+# plot la dispersion des prix pour chaque région, pour potentiellement permettre d'expliquer cet écart de densité.
+sns.boxplot(x='Origin', y='Price', data=swiss_production_data)
+plt.title('Price distribution by region')
+plt.show()
+```
+
+Regions 1 and 3 show greater price stability with shorter boxes, indicating less dispersion. Regions 5 and 4 show greater price volatility, as indicated by wider price ranges and the presence of outliers.
+
+
+### Multivariate Analysis - Switzerland
+## Average milk price per system of production over time
+
+```{python}
+# plot "Changes in the average production price as a function of the production system"
+# Calculate average prices for each date and production system
+swiss_production_data_moyenne = swiss_production_data.groupby(['Date', 'Système de production'])['Prix'].mean().reset_index()
+
+# Select unique production systems
+systemes_production = swiss_production_data['Système de production'].unique()
+
+# Create a graph for each production system
+plt.figure(figsize=(12, 6))
+
+for systeme in systemes_production:
+# Filter the DataFrame for each production system
+swiss_production_data_filtre = swiss_production_data_moyenne[swiss_production_data_moyenne['Système de production'] == systeme]
+# Draw the curve for the filtered production system
+plt.plot(swiss_production_data_filtre['Date'], swiss_production_data_filtre['Prix'],marker='.', linestyle='-', label=systeme)
+
+# Ajout des légendes, titres et étiquettes
+plt.title('Évolution du prix moyen par système de production en Suisse')
+plt.xlabel('Date')
+plt.ylabel('Prix Moyen (centimes de CHF)')
+plt.legend(title='Système de production', bbox_to_anchor=(1.05, 1), loc='upper left')  # Add a legend 
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
+plt.xticks(rotation=45) 
+
+plt.tight_layout()  
+plt.show()
+```
+
+The average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk. 
+The 'unknown' data are highly correlated with the 'conventional' data. 
+We note a seasonality in the data, with a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024. We'll come back to this later in the report.
+There was a spike in prices in period 2008, due to the global financial crisis.
+
+
+## Average price of milk production, by region and production system
+
+```{python}
+swiss_production_data = pd.read_csv('Swiss_Production.csv')
+swiss_production_data['Date'] = pd.to_datetime(swiss_production_data['Date']).dt.year
+swiss_production_data = swiss_production_data[swiss_production_data['Date'].between(2001, 2024)]
+
+swiss_production_data.sort_values(by=['Provenance du produit', 'Date'], inplace=True)
+
+swiss_production_data['Provenance du produit'] = pd.Categorical(swiss_production_data['Provenance du produit'],
+                                                             categories=['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'],
+                                                             ordered=True)
+
+fig = px.bar(
+    swiss_production_data, 
+    x='Provenance du produit', 
+    y='Prix', 
+    color='Système de production', 
+    barmode='group',
+    animation_frame='Date',
+     category_orders={"Provenance du Lait": ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']}
+)
+
+fig.update_layout(
+    title_text='Average price of milk production, by region and production system',
+    xaxis_title='Origin',
+    yaxis_title='Average Price in centimes',
+)
+
+fig.update_traces(
+    hovertemplate='Provenance du produit: %{x}<br>Système de production: %{marker.color}<br>Date: %{animation_frame}<br>Prix:%{y}'
+    )
+    
+years = swiss_production_data['Date'].unique()
+steps = []
+for year in years:
+    step = dict(
+        method='animate',
+        label=str(year),
+        args=[[str(year)], {'frame': {'duration': 300, 'redraw': True}, 'mode': 'immediate'}]
+    )
+    steps.append(step)
+
+# Add the slider to the figure.
+fig.update_layout(
+    sliders=[{'steps': steps}]
+)
+
+fig.layout.updatemenus[0].buttons = []
+fig.show()
+
+```
+
+Regions 5 and 3 have not produced organic milk since 2001. Region 3 has lower milk production than the other regions 
+
+
+### Lait Equitable Products
 
 To provide a comprehensive understanding of Lait Equitable's sales trends throughout 2023, we performed a month-by-month sales analysis. This exploration helps identify seasonal effects, peak sales periods, and potential areas for strategic adjustments. Here’s a detailed breakdown of the approach and findings:
 
