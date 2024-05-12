@@ -5,6 +5,104 @@
 -   Competing approaches
 -   Justifications
 
+## Additive Decomposition of Milk Price in Switzerland
+
+```{python}
+# import libraries 
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+# import data
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Calculez la moyenne des prix par date
+data = swiss_decomposition['Prix'].resample('M').mean()
+
+# Appliquez la décomposition classique
+decomposition = sm.tsa.seasonal_decompose(data, model='additive')  # ou 'multiplicative' selon le cas
+
+# Créez un graphique avec des subplots
+fig, axes = plt.subplots(4, 1, figsize=(10, 8))
+
+# Plot the original data
+axes[0].plot(data, label='Original')
+axes[0].set_title('Original Data')
+
+# Plot the trend component
+axes[1].plot(decomposition.trend, label='Trend')
+axes[1].set_title('Trend Component')
+
+# Plot the seasonal component
+axes[2].plot(decomposition.seasonal, label='Seasonal')
+axes[2].set_title('Seasonal Component')
+
+# Plot the residual component
+axes[3].plot(decomposition.resid, label='Residual')
+axes[3].set_title('Residual Component')
+
+# Set tight layout and show the plot
+plt.tight_layout()
+plt.show()
+```
+
+There is no clear trend, it decreases and then increases with two peaks in 2008 and 2014.
+There is a clear seasonal component due to weather conditions or agricultural cycles.
+The residual component is relatively stable, but shows some peaks which could indicate anomalies or events not taken into account by the trend and seasonality model.
+
+## Holt-Winters exponential smoothing model 
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+# Charger les données
+data = pd.read_csv('Swiss_Production.csv')
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+
+# Filtrer les données pour le lait bio et non bio
+data_bio = data[data['Système de production'] == 'Bio']['Prix'].resample('ME').mean()
+data_non_bio = data[data['Système de production'] == 'Conventionnel']['Prix'].resample('ME').mean()
+
+# Ajustement des modèles ETS
+model_bio = ExponentialSmoothing(data_bio, trend='add', seasonal='add', seasonal_periods=12)
+fit_bio = model_bio.fit()
+
+model_non_bio = ExponentialSmoothing(data_non_bio, trend='add', seasonal='add', seasonal_periods=12)
+fit_non_bio = model_non_bio.fit()
+
+# Prévision pour les 24 prochains mois
+forecast_bio = fit_bio.forecast(12)
+forecast_non_bio = fit_non_bio.forecast(12)
+
+# Tracer les résultats
+plt.figure(figsize=(14, 7))
+
+plt.subplot(1, 2, 1)
+plt.plot(data_non_bio, label='Original Non-Bio')
+plt.plot(forecast_non_bio, label='Forecast Non-Bio', linestyle='--')
+plt.title('Forecast of Non-Organic Milk Prices')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(data_bio, label='Original Bio')
+plt.plot(forecast_bio, label='Forecast Bio', linestyle='--')
+plt.title('Forecast of Organic Milk Prices')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+We apply the Holt-Winters model to predict the price over the next 12 months. This model is an extension of the simple exponential smoothing model. It takes trend and seasonality into account in its predictions for its two time series, since these two components play a crucial role as we have seen with the decomposition. 
+
+
 ## Forecasting Next Year Milk Prices
 
 ```{r}
