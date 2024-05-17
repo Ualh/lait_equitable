@@ -71,7 +71,7 @@ The 'Production system' variable has a higher percentage of missing values, arou
 As for the other characteristics, their percentage of missing values is relatively low thus we keep them too.
 
 ## General Analysis - All Countries
-# Milk Production by country 
+# Milk Production in Switzerland VS others 
 
 The milk sold in Switzerland comes from 14 different places - 14 values in 'Origin of product'. It would be interesting to see the distribution of the origin of milk in Switzerland, with the percentage of milk coming from Switzerland and the percentage of milk not coming from Switzerland.
 We create a new variable 'swiss_production_data' including all five Swiss regions. Then, we group all non-Swiss origins together in another category. This gives us:
@@ -141,7 +141,7 @@ We observe from this plot that producing milk in Switzerland is much more expens
 ### Univariate Analysis - Switzerland
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration. 
-To do this, we are going to use the variable 'swiss_production_data' which includes all the Swiss production and sales regions.
+To do this, we are going to use the variable 'swiss_production_data' we created before, which includes all the Swiss production and sales regions.
 
 ## Distribution of milk production for each Swiss region.
 
@@ -228,11 +228,10 @@ swiss_production_data_filtre = swiss_production_data_moyenne[swiss_production_da
 # Draw the curve for the filtered production system
 plt.plot(swiss_production_data_filtre['Date'], swiss_production_data_filtre['Prix'],marker='.', linestyle='-', label=systeme)
 
-# Ajout des légendes, titres et étiquettes
-plt.title('Évolution du prix moyen par système de production en Suisse')
+plt.title('Average price trend by production system in Switzerland')
 plt.xlabel('Date')
-plt.ylabel('Prix Moyen (centimes de CHF)')
-plt.legend(title='Système de production', bbox_to_anchor=(1.05, 1), loc='upper left')  # Add a legend 
+plt.ylabel('Average Price (cents)')
+plt.legend(title='System of production', bbox_to_anchor=(1.05, 1), loc='upper left')  # Add a legend 
 plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.xticks(rotation=45) 
 
@@ -299,7 +298,7 @@ fig.show()
 
 ```
 
-Regions 5 and 3 have not produced organic milk since 2001. Region 3 has lower milk production than the other regions 
+Regions 5 and 3 have not produced organic milk since 2001. Region 3 is the weakest region on the Swiss milk market, with lower production and a lower price than the other regions. This may be due to the location of the areas within this region.
 
 
 ### Wrangling and Cleaning
