@@ -267,6 +267,7 @@ We note a seasonality in the data, with a non-linear trend: a downward trend bet
 Then there is a fall in prices, both organic and conventional, until 2007, followed by a peak in 2008 (a potential correlation with the 2008 crisis?) and a second peak in 2014 for conventional milk. 
 From 2020 onwards, prices start to rise again then remain fairly constant over the last two years.
 
+
 ## Average price of milk production, by region and production system
 
 ```{python}
