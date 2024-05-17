@@ -19,7 +19,8 @@ data.head()
 data.nunique()
 ```
 This data set shows the price of organic and conventional milk production from Switzerland and other countries over time.
-Source - https://www.donnees-agrimarche.ch/donnees
+
+Source - [Agrimarche](https://www.donnees-agrimarche.ch/donnees)
 
 ## Wrangling and Cleaning 
 
@@ -64,6 +65,8 @@ fig.update_yaxes(range=[0, 100])
 fig.update_layout(title_text='Pourcentage de valeurs manquantes par colonne',
                   yaxis_title='Pourcentage de NaN',
                   xaxis_title='Colonne')
+                  
+#show plot
 fig.show()
 ```
 The columns with missing values are: Cost components, Production system, Sales region and Use mode.
@@ -87,6 +90,7 @@ clean_data['Provenance'] = clean_data['Provenance du produit'].apply(lambda x: '
 category_counts = clean_data['Provenance'].value_counts(normalize=True) * 100
 
 # Plot the distribution
+#use viridis palette colors
 plt.figure(figsize=(8, 4))
 plt.bar(category_counts.index, category_counts.values, color=['blue', 'red'])
 plt.xlabel('Origin')
@@ -94,8 +98,6 @@ plt.ylabel('Percentage (%)')
 plt.title('Distribution between Swiss and foreign milk')
 plt.ylim(0, 100)  
 plt.show()
-
-print(category_counts)
 ```
 
 The histogram shows a higher percentage of milk comes from Switzerland than from imports. However the difference is small, less than 10%.
