@@ -43,9 +43,9 @@ py_config()
 packages <- c(
   "here", # for the project's organization
   "tidyverse", # for wrangling
-  "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts',# for plotting
+  "ggrepel", "gghighlight", "patchwork", "maps", "scales", 'readxl', 'dygraphs', 'xts', "viridis",# for plotting
   "fpp3", 'viridis', 'plotly', 'kableExtra', "readxl", "reactable", 
-  "fpp3", "flextable", 'patchwork', "tseries", "forecast" #TS
+  "fpp3", "flextable", 'patchwork', "tseries", "forecast", "tsibbledata"#TS
   )
 purrr::walk(packages, function(pkg){
   if (!require(pkg, character.only = TRUE)) {

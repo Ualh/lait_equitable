@@ -5,6 +5,361 @@
 -   Competing approaches
 -   Justifications
 
+# Additive Decomposition of Milk Price in Switzerland
+
+```{python}
+# import libraries 
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+
+# import data
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Calculez la moyenne des prix par date
+data = swiss_decomposition['Prix'].resample('M').mean()
+
+# Appliquez la décomposition classique
+decomposition = sm.tsa.seasonal_decompose(data, model='additive')  # ou 'multiplicative' selon le cas
+
+# Créez un graphique avec des subplots
+fig, axes = plt.subplots(4, 1, figsize=(10, 8))
+
+# Plot the original data
+axes[0].plot(data, label='Original')
+axes[0].set_title('Original Data')
+
+# Plot the trend component
+axes[1].plot(decomposition.trend, label='Trend')
+axes[1].set_title('Trend Component')
+
+# Plot the seasonal component
+axes[2].plot(decomposition.seasonal, label='Seasonal')
+axes[2].set_title('Seasonal Component')
+
+# Plot the residual component
+axes[3].plot(decomposition.resid, label='Residual')
+axes[3].set_title('Residual Component')
+
+# Set tight layout and show the plot
+plt.tight_layout()
+plt.show()
+```
+
+There is no clear trend, it decreases and then increases with two peaks in 2008 and 2014.
+There is a clear seasonal component due to weather conditions or agricultural cycles.
+The residual component is relatively stable, but shows some peaks which could indicate anomalies or events not taken into account by the trend and seasonality model.
+
+
+# SARIMA model 
+## ACF & PACF - including all system of production
+
+We will then run a SARIMA model. Before applying this model, we need to check the stationarity of the data (and particularly the residuals) and determine the optimum values for the model parameters: p, d, q, P, D and Q.
+To determine these parameters, we will use the graphs Autocorrelation Function ACF and Partial Autocorrelation Function PACF. These graphs will help us to identify the dependency structure in the data.
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Calculez la moyenne des prix par date
+data = swiss_decomposition['Prix'].resample('ME').mean()  # Use 'M' for monthly resampling
+
+# Tracer ACF et PACF pour la série originale
+fig, ax = plt.subplots(2, 1, figsize=(12, 8))
+plot_acf(data.dropna(), ax=ax[0], lags=40)
+ax[0].set_title('Autocorrelation Function (ACF) - Série Originale')
+ax[0].set_xlabel('Lag (1Y)')  # Ajouter le titre de l'axe des abscisses
+ax[0].grid(True, linestyle='--')  # Ajouter la grille
+
+plot_pacf(data.dropna(), ax=ax[1], lags=40)
+ax[1].set_title('Partial Autocorrelation Function (PACF) - Série Originale')
+ax[1].set_xlabel('Lag (1Y)')
+ax[1].grid(True, linestyle='--')  # Ajouter la grille
+
+plt.tight_layout()
+plt.show()
+
+# Différenciation saisonnière pour supprimer la saisonnalité annuelle
+data_seasonal_diff = data.diff(12).dropna()
+
+# Différenciation simple pour supprimer la tendance
+data_diff = data_seasonal_diff.diff().dropna()
+
+# Tracer ACF et PACF pour la série différenciée
+fig, ax = plt.subplots(2, 1, figsize=(12, 8))
+plot_acf(data_seasonal_diff, ax=ax[0], lags=40)
+ax[0].set_title('Autocorrelation Function (ACF) - Série Différenciée')
+ax[0].set_xlabel('Lags (1Y)')  # Ajouter le titre de l'axe des abscisses
+ax[0].grid(True, linestyle='--')  # Ajouter la grille
+
+plot_pacf(data_seasonal_diff, ax=ax[1], lags=40)
+ax[1].set_title('Partial Autocorrelation Function (PACF) - Série Différenciée')
+ax[1].set_xlabel('Lag (1Y)')
+ax[1].grid(True, linestyle='--')  # Ajouter la grille
+
+plt.tight_layout()
+plt.show()
+```
+
+The blue zone represents the confidence interval around the zero line, set at 95%. Values outside this zone are considered statistically significant. If one of the values in our dataset falls outside this interval, this means that the autocorrelation is strong (i.e. significantly different from zero).
+
+The y-axis represents the autocorrelation and partial autocorrelation coefficients.
+ 
+The x-axis represents the lag. A lag of 1 means that autocorrelation is calculated between values at successive periods.
+
+The first two graphs show the ACF and PACF of the original time series. 
+The autocorrelation values are significant for several lags, indicating a trend or a seasonal component. The slow decay suggests that the data are not stationary. The presence of significant autocorrelation for many lags indicates a persistent trend in the data. This means that the series is non-stationary.
+The PACF shows significant peaks at the first lags, followed by a rapid decrease. This suggests that the effect of autocorrelation diminishes after a few lags.
+The first significant lags in the PACF suggest that a few autoregressive terms may be necessary to capture the structure in the data.
+
+The last two graphs show the ACF and PACF of the differentiated series.
+The differentiated series appears to be more stationary, as most of the autocorrelations are no longer significant. However, there may be some slight seasonality or residual effects.
+For PACF, the first lags show some significant values, but most of the values quickly fall within the confidence interval.
+The differentiated series shows a low-order autoregressive structure, suggesting that an ARIMA model with small parameters p and q may suffice.
+
+
+## Overall SARIMA forecast 
+
+Now that we have analysed these dependencies, we can set the parameters we need to apply the SARIMA model:
+
+Differentiation (d) : Since the original series is not stationary and the differentiated series appears to be stationary, we will use d=1.
+Autoregressive order (p) : The first lag in the PACF is significant, so p=1.
+Moving average order (q): The ACF shows some significant lags, but they are not dominant, so q=1.
+
+For seasonal components:
+Seasonal differentiation (D): The data shows seasonality, so we use D=1.
+Seasonal autoregressive order (P): The first lags in the seasonal PACF show slight significance, so P=1.
+Seasonal moving average order (Q): Similar to q, we use Q=1.
+Seasonal period (S) : As the data are monthly, we use S=12.
+
+
+```{python}
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# Ajustement du modèle SARIMA avec les paramètres déterminés
+sarima_model = SARIMAX(data, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+fit_sarima = sarima_model.fit(disp=False)
+
+# Prévision
+sarima_forecast = fit_sarima.get_forecast(steps=12).predicted_mean
+
+# Tracer les résultats
+plt.figure(figsize=(10, 5))
+plt.plot(data, label='Original')
+plt.plot(sarima_forecast, label='SARIMA Forecast', color='red')
+plt.title('SARIMA Forecast')
+plt.legend()
+plt.show()
+```
+
+## ACF & PACF for "Bio" & "Conventional"
+
+We're interested in seeing how the two production systems develop over the coming months. We apply ACF & PACF to each system of production : "Bio" and "Conventional".
+
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Définir les systèmes de production
+systemes_production = ['Bio', 'Conventionnel']
+
+# Créer un graphique pour chaque système de production
+for systeme in systemes_production:
+    # Filtrer le DataFrame pour chaque système de production
+    system_data = swiss_decomposition[swiss_decomposition['Système de production'] == systeme]
+    
+    # Calculez la moyenne des prix par date pour ce système
+    system_data = system_data['Prix'].resample('ME').mean().dropna()
+    
+    # Tracer ACF et PACF pour la série originale
+    fig, ax = plt.subplots(2, 1, figsize=(10, 6))
+    plot_acf(system_data, ax=ax[0], lags=40)
+    ax[0].set_title(f'Autocorrelation Function (ACF) - {systeme}')
+    ax[0].set_xlabel('Lag (1Y)')
+    ax[0].grid(True, linestyle='--')
+    
+    plot_pacf(system_data, ax=ax[1], lags=40)
+    ax[1].set_title(f'Partial Autocorrelation Function (PACF) - {systeme}')
+    ax[1].set_xlabel('Lag (1Y)')
+    ax[1].grid(True, linestyle='--')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Différenciation saisonnière pour supprimer la saisonnalité annuelle
+    system_seasonal_diff = system_data.diff(12).dropna()
+    
+    # Différenciation simple pour supprimer la tendance
+    system_diff = system_seasonal_diff.diff().dropna()
+    
+    # Tracer ACF et PACF pour la série différenciée
+    fig, ax = plt.subplots(2, 1, figsize=(10, 6))
+    plot_acf(system_diff, ax=ax[0], lags=40)
+    ax[0].set_title(f'Autocorrelation Function (ACF) - Série Différenciée - {systeme}')
+    ax[0].set_xlabel('Lag (1Y)')
+    ax[0].grid(True, linestyle='--')
+    
+    plot_pacf(system_diff, ax=ax[1], lags=40)
+    ax[1].set_title(f'Partial Autocorrelation Function (PACF) - Série Différenciée - {systeme}')
+    ax[1].set_xlabel('Lag (1Y)')
+    ax[1].grid(True, linestyle='--')
+    
+    plt.tight_layout()
+    plt.show()
+```
+
+
+## SARIMA Forecast for "Bio" and "Conventional"
+
+```{python}
+# Vérifiez l'installation de pmdarima
+try:
+    import pmdarima as pm
+    print("pmdarima is installed and imported successfully!")
+except ImportError:
+    import sys
+    !{sys.executable} -m pip install pmdarima
+    import pmdarima as pm
+    print("pmdarima has been installed and imported successfully!")
+```
+
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+import pmdarima as pm
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Définir les systèmes de production
+systemes_production = ['Bio', 'Conventionnel']
+
+# Préparer le DataFrame pour stocker les prévisions
+forecast_data = pd.DataFrame(index=pd.date_range(start=swiss_decomposition.index[-1] + pd.Timedelta(days=1), periods=12, freq='M'))
+
+# Liste pour stocker les modèles ajustés
+fitted_models = []
+
+# Créer un graphique pour chaque système de production
+for systeme in systemes_production:
+    # Filtrer le DataFrame pour chaque système de production
+    system_data = swiss_decomposition[swiss_decomposition['Système de production'] == systeme]
+    
+    # Calculez la moyenne des prix par date pour ce système
+    system_data = system_data['Prix'].resample('M').mean().dropna()
+    
+    # Utiliser auto_arima pour déterminer les meilleurs paramètres
+    auto_model = pm.auto_arima(system_data, seasonal=True, m=12, trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+    print(f'Auto ARIMA summary for {systeme}:\n{auto_model.summary()}')
+    
+    # Ajustement du modèle SARIMA avec les paramètres déterminés
+    sarima_model = SARIMAX(system_data, order=auto_model.order, seasonal_order=auto_model.seasonal_order)
+    fit_sarima = sarima_model.fit(disp=False)
+    fitted_models.append(fit_sarima)
+
+    # Prévision
+    forecast = fit_sarima.get_forecast(steps=12)
+    sarima_forecast = forecast.predicted_mean
+    forecast_conf_int = forecast.conf_int(alpha = 0.05) # fixe l'intervalle à 95%
+
+    # Ajouter les prévisions au DataFrame de prévision
+    forecast_data[systeme] = sarima_forecast
+
+    # Tracer les prévisions
+    plt.figure(figsize=(12, 6))
+    plt.plot(system_data, label='Original')
+    plt.plot(sarima_forecast.index, sarima_forecast, linestyle='--', label=f'{systeme} Forecast')
+    plt.fill_between(sarima_forecast.index, forecast_conf_int.iloc[:, 0], forecast_conf_int.iloc[:, 1], color='pink', alpha=0.3, label=f'{systeme} 95% Confidence Interval')
+    plt.title(f'SARIMA Forecast for {systeme}')
+    plt.xlabel('Date')
+    plt.ylabel('Prix Moyen (centimes de CHF)')
+    plt.legend()
+    plt.grid(True, linestyle='--')
+    plt.tight_layout()
+    plt.show()
+```
+
+Expliquer les résultats 
+
+
+# Holt-Winters exponential smoothing model 
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+# Charger les données
+data = pd.read_csv('Swiss_Production.csv')
+data['Date'] = pd.to_datetime(data['Date'])
+data.set_index('Date', inplace=True)
+
+# Filtrer les données pour le lait bio et non bio
+data_bio = data[data['Système de production'] == 'Bio']['Prix'].resample('ME').mean()
+data_non_bio = data[data['Système de production'] == 'Conventionnel']['Prix'].resample('ME').mean()
+
+# Ajustement des modèles ETS
+model_bio = ExponentialSmoothing(data_bio, trend='add', seasonal='add', seasonal_periods=12)
+fit_bio = model_bio.fit()
+
+model_non_bio = ExponentialSmoothing(data_non_bio, trend='add', seasonal='add', seasonal_periods=12)
+fit_non_bio = model_non_bio.fit()
+
+# Prévision pour les 24 prochains mois
+forecast_bio = fit_bio.forecast(12)
+forecast_non_bio = fit_non_bio.forecast(12)
+
+# Tracer les résultats
+plt.figure(figsize=(14, 7))
+
+plt.subplot(1, 2, 1)
+plt.plot(data_non_bio, label='Original Non-Bio')
+plt.plot(forecast_non_bio, label='Forecast Non-Bio', linestyle='--')
+plt.title('Forecast of Non-Organic Milk Prices')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(data_bio, label='Original Bio')
+plt.plot(forecast_bio, label='Forecast Bio', linestyle='--')
+plt.title('Forecast of Organic Milk Prices')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+```
+
+We apply the Holt-Winters model to predict the price over the next 12 months. This model is an extension of the simple exponential smoothing model. It takes trend and seasonality into account in its predictions for its two time series, since these two components play a crucial role as we have seen with the decomposition. 
+
+
 ## Forecasting Next Year Milk Prices
 
 ```{r}
@@ -344,16 +699,17 @@ top_performing_stores
 
 #### Correlating Political Parties with Milk Sales
 
+Here, we will then make a scatterplot to identify if there is any correlation between any political party and sales of lait equitable. Our aim is to show that there might be a link with milk sales and a certain political party: are the sales correlated to a certain party presence?
 ```{r}
 # Calculate correlation coefficients for each party
-correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
-                             Correlation = sapply(merged_data[, 4:8], function(x) cor(x, merged_data$`2023`)))
+correlation_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts", "Vertliberaux"),
+                             Correlation = sapply(merged_data[, 4:9], function(x) cor(x, merged_data$`2023`)))
 
 # Print the correlation coefficients
 print(correlation_df)
 
 # Create a matrix of plots for each party
-party_plots <- lapply(names(merged_data)[4:8], function(party) {
+party_plots <- lapply(names(merged_data)[4:9], function(party) {
   ggplot(merged_data, aes_string(x = "`2023`", y = party)) +
     geom_point() +
     geom_smooth(method = "lm", se = FALSE, color = "blue") +
@@ -366,4 +722,297 @@ matrix_plot <- gridExtra::grid.arrange(grobs = party_plots, ncol = 2)
 matrix_plot
 ```
 
+We can now notice that there is no specific correlation between a certain political party and sales of Lait équitable.
+
+We will therefore proceed to select only the Locations where a political party has more than 20% presence, and then sum all the sales per political party, to see which party has the most influence over sales.
+
+```{r}
+
+# Read sales data from data.qmd
+sales_data_2023 <- sales_data %>%
+  select(-`2022`)
+
+# Filter party data to keep only values above 20
+filtered_party_data <- party_data %>%
+  filter(PLR > 20 | PS > 20 | UDC > 20 | Centre > 20 | Verts > 20 | Vertliberaux > 20)
+
+# Create separate datasets for each political party
+plr_data <- filtered_party_data %>%
+  filter(PLR > 20) %>%
+  select(Location, PLR)
+
+ps_data <- filtered_party_data %>%
+  filter(PS > 20) %>%
+  select(Location, PS)
+
+udc_data <- filtered_party_data %>%
+  filter(UDC > 20) %>%
+  select(Location, UDC)
+
+centre_data <- filtered_party_data %>%
+  filter(Centre > 20) %>%
+  select(Location, Centre)
+
+verts_data <- filtered_party_data %>%
+  filter(Verts > 20) %>%
+  select(Location, Verts)
+
+vertliberaux_data <- filtered_party_data %>%
+  filter(Vertliberaux > 20) %>%
+  select(Location, Vertliberaux)
+
+# Merge each party's data with sales data for 2023
+plr_sales <- merge(sales_data_2023, plr_data, by.x = "Location")
+ps_sales <- merge(sales_data_2023, ps_data, by.x = "Location")
+udc_sales <- merge(sales_data_2023, udc_data, by.x = "Location")
+centre_sales <- merge(sales_data_2023, centre_data, by.x = "Location")
+verts_sales <- merge(sales_data_2023, verts_data, by.x = "Location")
+vertliberaux_sales <- merge(sales_data_2023, vertliberaux_data, by.x = "Location")
+
+# Calculate total sales for each party
+plr_total_sales <- sum(plr_sales$`2023`)
+ps_total_sales <- sum(ps_sales$`2023`)
+udc_total_sales <- sum(udc_sales$`2023`)
+centre_total_sales <- sum(centre_sales$`2023`)
+verts_total_sales <- sum(verts_sales$`2023`)
+
+# Create a data frame for total sales by party
+total_sales_df <- data.frame(Party = c("PLR", "PS", "UDC", "Centre", "Verts"),
+                             Total_Sales = c(plr_total_sales, ps_total_sales, udc_total_sales,
+                                             centre_total_sales, verts_total_sales))
+
+# Define colors for each party
+party_colors <- c("PLR" = "blue", "PS" = "red", "UDC" = "darkgreen", "Centre" = "orange", "Verts" = "green")
+
+# Sort the data frame by Total_Sales in descending order
+total_sales_df <- total_sales_df[order(-total_sales_df$Total_Sales), ]
+
+# Plot total sales by party in descending order with specified colors
+ggplot(total_sales_df, aes(x = reorder(Party, -Total_Sales), y = Total_Sales, fill = Party)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Total Sales by Political Party in 2023", x = "Party", y = "Total Sales") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_manual(values = party_colors)
+```
+
+We can see that there actually is a lot of sales of lait équitable where PS is present more than 20%
+
 #### Correlating average revenue with Milk Sales
+
+Now, we want to see if there is some correlation between the income per taxpayer of a commune and its sales.
+```{r}
+# Create a scatterplot
+ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2022`)) +
+  geom_point(aes(color = Location)) +
+  labs(x = "Revenu/contribuable", y = "Sales 2022", title = "Relationship between Revenu/contribuable and Sales in 2022") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+
+# Create another scatterplot for 2023
+ggplot(merged_df, aes(x = `Revenu/contribuable`, y = `2023`)) +
+  geom_point(aes(color = Location)) +
+  labs(x = "Revenu/contribuable", y = "Sales 2023", title = "Relationship between Revenu/contribuable and Sales in 2023") +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_minimal()
+```
+Here we can again see that there is no specific correlation, and that the correlation is even negative. We will then move on to our last part where we will try to correlate the sales of lait équitable with the proximity of milk producers.
+
+#### Correlating Distance to Producers 
+
+Does being close to a Producer influence Sales ?
+What we do here is to calculate a distance matrix in order to determine the proximity of each city to the producers. We then analyze the correlation between the total sales and the minimum distance to the producer. This analysis helps us understand if the proximity to the producer has any significant impact on the sales of Lait Equitable products.
+
+The distance Matrix is shown as follow : 
+```{python}
+from geopy.distance import geodesic
+latitudes = []
+longitudes = []
+
+# Parse each location and extract latitude and longitude
+for location in locations:
+    lat, lon = location.split(',')
+    latitudes.append(float(lat))
+    longitudes.append(float(lon))
+
+# Create a DataFrame using pandas
+producers = pd.DataFrame({
+    'Latitude': latitudes,
+    'Longitude': longitudes
+})
+
+#get the df from the python code
+cities = df['City']
+
+# Initialize an empty DataFrame to store distances
+distance_matrix = pd.DataFrame(index=cities, columns=[f"Producer {i+1}" for i in range(len(producers))])
+
+# Calculate distances and fill the DataFrame
+for city in cities:
+    city_lat, city_lon = get_lat_lon(city)
+    if city_lat is not None and city_lon is not None:
+        city_coords = (city_lat, city_lon)
+        for index, producer in producers.iterrows():
+            producer_coords = (producer['Latitude'], producer['Longitude'])
+            distance = geodesic(city_coords, producer_coords).kilometers  # distance in kilometers
+            distance_matrix.loc[city, f"Producer {index+1}"] = distance
+            
+
+# Flatten the DataFrame to get all distance values in one series
+all_distances = distance_matrix.values.flatten()
+```
+
+```{r}
+#get the distance_matrix in r
+distance_matrix <- py$distance_matrix
+
+#use reactable to show the table 
+#show it using reactable
+reactable(
+  distance_matrix,  
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
+We can see here the distribution of distances between cities and producers. The histogram shows the frequency of distances between cities and producers, providing insights into the geographical distribution of producers and their proximity to cities.
+
+
+| Statistic         | Distance     |
+|-------------------|--------------|
+| Minimum Distance  | 0.68 km      |
+| Maximum Distance  | 283.46 km    |
+| Average Distance  | 116.73 km    |
+| Median Distance   | 117.62 km    |
+
+```{python}
+# Basic statistics
+print("Distance Statistics:")
+print("Minimum Distance: {:.2f} km".format(all_distances.min()))
+print("Maximum Distance: {:.2f} km".format(all_distances.max()))
+print("Average Distance: {:.2f} km".format(all_distances.mean()))
+print("Median Distance: {:.2f} km".format(np.median(all_distances)))
+
+# Histogram of the distances
+plt.figure(figsize=(10, 6))
+plt.hist(all_distances, bins=30, color='#24918d', alpha=0.7)
+plt.title('Distribution of Distances Between Cities and Producers')
+plt.xlabel('Distance in km')
+plt.ylabel('Frequency')
+plt.grid(True)
+plt.show()
+```
+
+We see that the correlation is non-existent between the total sales and the distance to the producer. This suggests that the proximity to the producer does not significantly influence the sales of Lait Equitable products in the analyzed locations.
+
+| Correlation between Total Sales 2022 and Min Distance to Producer: | Correlation between Total Sales 2023 and Min Distance to Producer: |
+|------------------------------------|------------------------------------|
+| 1.000000                                                           | 0.014807                                                           |
+| 0.014807                                                           | 1.000000 
+```{python}
+df_sales = r.get('df_merged_sales')
+#rename 'Location' column as 'City'
+df_sales.rename(columns={'Location': 'City'}, inplace=True)
+df_sales.set_index('City', inplace=True)
+
+# Calculate the minimum distance for each city and add it to df_sales
+df_sales['Min Distance to Producer'] = distance_matrix.min(axis=1)
+
+# Calculate Pearson correlation
+correlation_2022 = df_sales[['Total Sales 2022', 'Min Distance to Producer']].corr(method='pearson')
+correlation_2023 = df_sales[['Total Sales 2023', 'Min Distance to Producer']].corr(method='pearson')
+
+print("Correlation between Total Sales 2022 and Min Distance to Producer:")
+print(correlation_2022)
+
+print("Correlation between Total Sales 2023 and Min Distance to Producer:")
+print(correlation_2023)
+
+# Convert 'Total Sales 2022' and 'Min Distance to Producer' to numeric types explicitly
+df_sales['Total Sales 2022'] = pd.to_numeric(df_sales['Total Sales 2022'], errors='coerce')
+df_sales['Min Distance to Producer'] = pd.to_numeric(df_sales['Min Distance to Producer'], errors='coerce')
+
+
+# Plotting Total Sales 2022 vs. Min Distance to Producer
+plt.figure(figsize=(10, 6))
+sns.regplot(
+    x='Min Distance to Producer', 
+    y='Total Sales 2022', 
+    data=df_sales,
+    scatter_kws={'s': 50, 'color': '#7e57c2'},  # Customizing the scatter plot points
+    line_kws={'color': '#33848D', 'lw': 2}  # Customizing the regression line
+)
+plt.title('Total Sales 2022 vs. Minimum Distance to Producer')
+plt.xlabel('Minimum Distance to Producer (km)')
+plt.ylabel('Total Sales 2022')
+plt.grid(True)
+plt.show()
+
+# Plot for 2023
+plt.figure(figsize=(10, 6))
+sns.regplot(x='Min Distance to Producer', y='Total Sales 2023', data=df_sales, 
+            scatter_kws={'s': 50, 'color': '#33848D'}, line_kws={'color': '#7e57c2'})
+plt.title('Total Sales 2023 vs. Min Distance to Producer')
+plt.xlabel('Minimum Distance to Producer (km)')
+plt.ylabel('Total Sales 2023')
+plt.grid(True)
+plt.show()
+```
+
+
+#### Diving Deeper
+
+To dive a bit deeper into the insights on how the sales of each manor is influenced, we'll write a Python script using the `pandas` library. The goal is to iterate through each city (column in the distance_matrix DataFrame), find the producer (row) with the minimum distance for that city, and then tally the number of times each producer is the closest to any city. Finally, we'll create a DataFrame to display the number of times each producer was closest to a city.
+
+Here is a step-by-step guide and the corresponding code:
+
+Import the pandas library. Load the data into a DataFrame: We'll assume the data you provided is in a CSV or Excel file. If it's in another format, you can adjust the loading method accordingly. Initialize a DataFrame to keep track of the scores for each producer. Iterate through each column (city) in the distance_matrix_t DataFrame, find the index of the minimum distance, and update the score for the respective producer. Display the final DataFrame with the scores.
+
+```{python}
+# Initialize a DataFrame to store scores for each producer
+scores = pd.DataFrame(0, index=distance_matrix.index, columns=['Score'])
+
+# Iterate through each city (column) to find the producer with the minimum distance
+for city in distance_matrix.columns:
+    min_distance_producer = distance_matrix[city].idxmin()
+    scores.loc[min_distance_producer, 'Score'] += 1
+
+#merges scores with df_sales
+df = df_sales.merge(scores, left_index=True, right_index=True, how='left')
+correlation_matrix = df[['Total Sales 2022', 'Total Sales 2023', 'Score']].corr()
+
+# Display the correlation matrix
+correlation_matrix
+```
+Here is the correlation matrix for the total sales in 2022, total sales in 2023, and the score calculated based on the proximity of each producer to the cities
+
+|                  | Total Sales 2022 | Total Sales 2023 | Score      |
+|------------------|-------------------|-------------------|------------|
+| Total Sales 2022 | 1.000000          | 0.994222          | 0.250883   |
+| Total Sales 2023 | 0.994222          | 1.000000          | 0.268046   |
+| Score            | 0.250883          | 0.268046          | 1.000000   |
+
+
+It is better than the minimum distance correlation, but it is still not very high. This suggests that the proximity of a producer to a city, as measured by the score, has a moderate positive correlation with the total sales in both 2022 and 2023.
+
+
+```{python}
+# Plotting 'Sales 2022' vs 'Score'
+plt.figure(figsize=(10, 5))
+plt.subplot(1, 2, 1)  # 1 row, 2 columns, 1st subplot
+sns.regplot(x='Total Sales 2022', y='Score', data=df, ci=None, scatter_kws={'color': '#7e57c2'}, line_kws={'color': '#33848D'})
+plt.title('Sales 2022 vs. Score')
+
+# Plotting 'Sales 2023' vs 'Score'
+plt.subplot(1, 2, 2)  # 1 row, 2 columns, 2nd subplot
+sns.regplot(x='Total Sales 2023', y='Score', data=df, ci=None, scatter_kws={'color': '#33848D'}, line_kws={'color': '#7e57c2'})
+plt.title('Sales 2023 vs. Score')
+
+# Show the plots
+plt.tight_layout()
+plt.show()
+```
