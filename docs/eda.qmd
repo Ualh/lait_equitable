@@ -59,11 +59,13 @@ ggplot(sorted_sales_by_location, aes(x=reorder(`Row Labels`, Total_Sales), y=Tot
 
 The graph illustrates the total sales by location for Lait Equitable across various stores in 2023, organized from the lowest to the highest sales volume.
 
+
 -   **Variability in Sales Across Locations:** The graph displays a significant variation in sales across different locations. The left side of the graph shows locations with the least sales, starting with Chur, Rapperswil, St. Gall, and progressively increasing towards the right.
 -   **Low Sales in Certain Areas:** Locations like Chur, Rapperswil, and St. Gall have notably low sales, which could indicate either a lower demand for Lait Equitable's products in these areas or possibly less effective marketing and distribution strategies.
 -   **High Sales in Specific Locations:** The right end of the graph, particularly the last five locations, shows a sharp increase in sales. Notably, Vevey, Marin-Epagnier, Sierre and Monthey exhibit high sales, with Monthey being the highest. This might indicate a stronger market presence, better consumer acceptance, or more effective promotional activities in these regions.
 -   **Potential Market Strengths and Weaknesses:** The graph effectively highlights where Lait Equitable is performing well and where there might be room for improvement. For instance, the high sales in cities like Sierre and Monthey suggest strong market penetration and acceptance.
 -   **Strategic Insights:** For the Lait Equitable, this graph provides crucial data points for understanding which locations might need more focused marketing efforts or adjustments in distribution strategies. Additionally, it could help in identifying successful strategies in high-performing locations that could be replicated in areas with lower sales.
+
 
 ```{r}
 #remove grand total

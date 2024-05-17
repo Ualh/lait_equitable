@@ -10,8 +10,8 @@ if (!require("renv", character.only = TRUE)) {
 }
 
 # Initialize renv and restore packages from the lockfile
-# renv::init()
-# renv::restore()
+#renv::init()
+#renv::restore()
 
 ########################################
 ## The following sets the python path ##
@@ -19,9 +19,14 @@ if (!require("renv", character.only = TRUE)) {
 
 ### /!\ uncomment YOUR OPTIOM /!\ ###
 #option 1 - run python locally
+#library(reticulate)
+#Sys.setenv(RETICULATE_PYTHON = "C:/Python312/python.exe")
+#use_python("C:/Python312/python.exe", required = TRUE)
+#py_config()
+
 library(reticulate)
-Sys.setenv(RETICULATE_PYTHON = "C:/Python312/python.exe")
-use_python("C:/Python312/python.exe", required = TRUE)
+Sys.setenv(RETICULATE_PYTHON = "/Users/raimon/Desktop/Github_repo/lait_equitable/.venv/bin/python3")
+use_python("/Users/raimon/Desktop/Github_repo/lait_equitable/.venv/bin/python3", required = TRUE)
 py_config()
 
 # option 2
