@@ -289,7 +289,7 @@ for systeme in systemes_production:
     # Prévision
     forecast = fit_sarima.get_forecast(steps=12)
     sarima_forecast = forecast.predicted_mean
-    forecast_conf_int = forecast.conf_int()
+    forecast_conf_int = forecast.conf_int(alpha = 0.05) # fixe l'intervalle à 95%
 
     # Ajouter les prévisions au DataFrame de prévision
     forecast_data[systeme] = sarima_forecast
@@ -298,7 +298,7 @@ for systeme in systemes_production:
     plt.figure(figsize=(12, 6))
     plt.plot(system_data, label='Original')
     plt.plot(sarima_forecast.index, sarima_forecast, linestyle='--', label=f'{systeme} Forecast')
-    plt.fill_between(sarima_forecast.index, forecast_conf_int.iloc[:, 0], forecast_conf_int.iloc[:, 1], color='pink', alpha=0.3, label=f'{systeme} Confidence Interval')
+    plt.fill_between(sarima_forecast.index, forecast_conf_int.iloc[:, 0], forecast_conf_int.iloc[:, 1], color='pink', alpha=0.3, label=f'{systeme} 95% Confidence Interval')
     plt.title(f'SARIMA Forecast for {systeme}')
     plt.xlabel('Date')
     plt.ylabel('Prix Moyen (centimes de CHF)')
