@@ -41,6 +41,6 @@ Source - [faireswiss.ch](https://www.faireswiss.ch/fr/lait-equitable)
 
 ## Research questions
 
-1.  Sales Analysis Across Manors: To determine the factors contributing to the success of Lait Equitable's milk in some Manor stores but not in others.
-2.  Price Differences: To analyze the price differences between conventional and organic milk and their impact on market demand and supply.
-3.  Demand for Organic Milk: To study how the demand for organic milk has evolved in recent years and identify the driving factors behind this trend.
+1.  Price Differences: To analyze the price differences between conventional and organic milk and their impact on market demand and supply.
+2.  Demand for Organic Milk: To study how the demand for organic milk has evolved in recent years and identify the driving factors behind this trend.
+3.  Sales Analysis Across Manors: To determine the factors contributing to the success of Lait Equitable's milk in some Manor stores but not in others.
