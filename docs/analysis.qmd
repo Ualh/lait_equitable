@@ -5,7 +5,7 @@
 -   Competing approaches
 -   Justifications
 
-## Additive Decomposition of Milk Price in Switzerland
+# Additive Decomposition of Milk Price in Switzerland
 
 ```{python}
 # import libraries 
@@ -54,7 +54,264 @@ There is no clear trend, it decreases and then increases with two peaks in 2008 
 There is a clear seasonal component due to weather conditions or agricultural cycles.
 The residual component is relatively stable, but shows some peaks which could indicate anomalies or events not taken into account by the trend and seasonality model.
 
-## Holt-Winters exponential smoothing model 
+
+# SARIMA model 
+## ACF & PACF - including all system of production
+
+We will then run a SARIMA model. Before applying this model, we need to check the stationarity of the data (and particularly the residuals) and determine the optimum values for the model parameters: p, d, q, P, D and Q.
+To determine these parameters, we will use the graphs Autocorrelation Function ACF and Partial Autocorrelation Function PACF. These graphs will help us to identify the dependency structure in the data.
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Calculez la moyenne des prix par date
+data = swiss_decomposition['Prix'].resample('ME').mean()  # Use 'M' for monthly resampling
+
+# Tracer ACF et PACF pour la série originale
+fig, ax = plt.subplots(2, 1, figsize=(12, 8))
+plot_acf(data.dropna(), ax=ax[0], lags=40)
+ax[0].set_title('Autocorrelation Function (ACF) - Série Originale')
+ax[0].set_xlabel('Lag (1Y)')  # Ajouter le titre de l'axe des abscisses
+ax[0].grid(True, linestyle='--')  # Ajouter la grille
+
+plot_pacf(data.dropna(), ax=ax[1], lags=40)
+ax[1].set_title('Partial Autocorrelation Function (PACF) - Série Originale')
+ax[1].set_xlabel('Lag (1Y)')
+ax[1].grid(True, linestyle='--')  # Ajouter la grille
+
+plt.tight_layout()
+plt.show()
+
+# Différenciation saisonnière pour supprimer la saisonnalité annuelle
+data_seasonal_diff = data.diff(12).dropna()
+
+# Différenciation simple pour supprimer la tendance
+data_diff = data_seasonal_diff.diff().dropna()
+
+# Tracer ACF et PACF pour la série différenciée
+fig, ax = plt.subplots(2, 1, figsize=(12, 8))
+plot_acf(data_seasonal_diff, ax=ax[0], lags=40)
+ax[0].set_title('Autocorrelation Function (ACF) - Série Différenciée')
+ax[0].set_xlabel('Lags (1Y)')  # Ajouter le titre de l'axe des abscisses
+ax[0].grid(True, linestyle='--')  # Ajouter la grille
+
+plot_pacf(data_seasonal_diff, ax=ax[1], lags=40)
+ax[1].set_title('Partial Autocorrelation Function (PACF) - Série Différenciée')
+ax[1].set_xlabel('Lag (1Y)')
+ax[1].grid(True, linestyle='--')  # Ajouter la grille
+
+plt.tight_layout()
+plt.show()
+```
+
+The blue zone represents the confidence interval around the zero line, set at 95%. Values outside this zone are considered statistically significant. If one of the values in our dataset falls outside this interval, this means that the autocorrelation is strong (i.e. significantly different from zero).
+
+The y-axis represents the autocorrelation and partial autocorrelation coefficients.
+ 
+The x-axis represents the lag. A lag of 1 means that autocorrelation is calculated between values at successive periods.
+
+The first two graphs show the ACF and PACF of the original time series. 
+The autocorrelation values are significant for several lags, indicating a trend or a seasonal component. The slow decay suggests that the data are not stationary. The presence of significant autocorrelation for many lags indicates a persistent trend in the data. This means that the series is non-stationary.
+The PACF shows significant peaks at the first lags, followed by a rapid decrease. This suggests that the effect of autocorrelation diminishes after a few lags.
+The first significant lags in the PACF suggest that a few autoregressive terms may be necessary to capture the structure in the data.
+
+The last two graphs show the ACF and PACF of the differentiated series.
+The differentiated series appears to be more stationary, as most of the autocorrelations are no longer significant. However, there may be some slight seasonality or residual effects.
+For PACF, the first lags show some significant values, but most of the values quickly fall within the confidence interval.
+The differentiated series shows a low-order autoregressive structure, suggesting that an ARIMA model with small parameters p and q may suffice.
+
+
+## Overall SARIMA forecast 
+
+Now that we have analysed these dependencies, we can set the parameters we need to apply the SARIMA model:
+
+Differentiation (d) : Since the original series is not stationary and the differentiated series appears to be stationary, we will use d=1.
+Autoregressive order (p) : The first lag in the PACF is significant, so p=1.
+Moving average order (q): The ACF shows some significant lags, but they are not dominant, so q=1.
+
+For seasonal components:
+Seasonal differentiation (D): The data shows seasonality, so we use D=1.
+Seasonal autoregressive order (P): The first lags in the seasonal PACF show slight significance, so P=1.
+Seasonal moving average order (Q): Similar to q, we use Q=1.
+Seasonal period (S) : As the data are monthly, we use S=12.
+
+
+```{python}
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+
+# Ajustement du modèle SARIMA avec les paramètres déterminés
+sarima_model = SARIMAX(data, order=(1, 1, 1), seasonal_order=(1, 1, 1, 12))
+fit_sarima = sarima_model.fit(disp=False)
+
+# Prévision
+sarima_forecast = fit_sarima.get_forecast(steps=12).predicted_mean
+
+# Tracer les résultats
+plt.figure(figsize=(10, 5))
+plt.plot(data, label='Original')
+plt.plot(sarima_forecast, label='SARIMA Forecast', color='red')
+plt.title('SARIMA Forecast')
+plt.legend()
+plt.show()
+```
+
+## ACF & PACF for "Bio" & "Conventional"
+
+We're interested in seeing how the two production systems develop over the coming months. We apply ACF & PACF to each system of production : "Bio" and "Conventional".
+
+
+```{python}
+import pandas as pd
+import statsmodels.api as sm
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Définir les systèmes de production
+systemes_production = ['Bio', 'Conventionnel']
+
+# Créer un graphique pour chaque système de production
+for systeme in systemes_production:
+    # Filtrer le DataFrame pour chaque système de production
+    system_data = swiss_decomposition[swiss_decomposition['Système de production'] == systeme]
+    
+    # Calculez la moyenne des prix par date pour ce système
+    system_data = system_data['Prix'].resample('ME').mean().dropna()
+    
+    # Tracer ACF et PACF pour la série originale
+    fig, ax = plt.subplots(2, 1, figsize=(10, 6))
+    plot_acf(system_data, ax=ax[0], lags=40)
+    ax[0].set_title(f'Autocorrelation Function (ACF) - {systeme}')
+    ax[0].set_xlabel('Lag (1Y)')
+    ax[0].grid(True, linestyle='--')
+    
+    plot_pacf(system_data, ax=ax[1], lags=40)
+    ax[1].set_title(f'Partial Autocorrelation Function (PACF) - {systeme}')
+    ax[1].set_xlabel('Lag (1Y)')
+    ax[1].grid(True, linestyle='--')
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Différenciation saisonnière pour supprimer la saisonnalité annuelle
+    system_seasonal_diff = system_data.diff(12).dropna()
+    
+    # Différenciation simple pour supprimer la tendance
+    system_diff = system_seasonal_diff.diff().dropna()
+    
+    # Tracer ACF et PACF pour la série différenciée
+    fig, ax = plt.subplots(2, 1, figsize=(10, 6))
+    plot_acf(system_diff, ax=ax[0], lags=40)
+    ax[0].set_title(f'Autocorrelation Function (ACF) - Série Différenciée - {systeme}')
+    ax[0].set_xlabel('Lag (1Y)')
+    ax[0].grid(True, linestyle='--')
+    
+    plot_pacf(system_diff, ax=ax[1], lags=40)
+    ax[1].set_title(f'Partial Autocorrelation Function (PACF) - Série Différenciée - {systeme}')
+    ax[1].set_xlabel('Lag (1Y)')
+    ax[1].grid(True, linestyle='--')
+    
+    plt.tight_layout()
+    plt.show()
+```
+
+
+## SARIMA Forecast for "Bio" and "Conventional"
+
+```{python}
+# Vérifiez l'installation de pmdarima
+try:
+    import pmdarima as pm
+    print("pmdarima is installed and imported successfully!")
+except ImportError:
+    import sys
+    !{sys.executable} -m pip install pmdarima
+    import pmdarima as pm
+    print("pmdarima has been installed and imported successfully!")
+```
+
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+import pmdarima as pm
+
+# Importer les données
+swiss_decomposition = pd.read_csv('Swiss_Production.csv')
+
+# Assurez-vous que les dates sont de type datetime et que 'Date' est l'index
+swiss_decomposition['Date'] = pd.to_datetime(swiss_decomposition['Date'])
+swiss_decomposition.set_index('Date', inplace=True)
+
+# Définir les systèmes de production
+systemes_production = ['Bio', 'Conventionnel']
+
+# Préparer le DataFrame pour stocker les prévisions
+forecast_data = pd.DataFrame(index=pd.date_range(start=swiss_decomposition.index[-1] + pd.Timedelta(days=1), periods=12, freq='M'))
+
+# Liste pour stocker les modèles ajustés
+fitted_models = []
+
+# Créer un graphique pour chaque système de production
+for systeme in systemes_production:
+    # Filtrer le DataFrame pour chaque système de production
+    system_data = swiss_decomposition[swiss_decomposition['Système de production'] == systeme]
+    
+    # Calculez la moyenne des prix par date pour ce système
+    system_data = system_data['Prix'].resample('M').mean().dropna()
+    
+    # Utiliser auto_arima pour déterminer les meilleurs paramètres
+    auto_model = pm.auto_arima(system_data, seasonal=True, m=12, trace=True, error_action='ignore', suppress_warnings=True, stepwise=True)
+    print(f'Auto ARIMA summary for {systeme}:\n{auto_model.summary()}')
+    
+    # Ajustement du modèle SARIMA avec les paramètres déterminés
+    sarima_model = SARIMAX(system_data, order=auto_model.order, seasonal_order=auto_model.seasonal_order)
+    fit_sarima = sarima_model.fit(disp=False)
+    fitted_models.append(fit_sarima)
+
+    # Prévision
+    forecast = fit_sarima.get_forecast(steps=12)
+    sarima_forecast = forecast.predicted_mean
+    forecast_conf_int = forecast.conf_int()
+
+    # Ajouter les prévisions au DataFrame de prévision
+    forecast_data[systeme] = sarima_forecast
+
+    # Tracer les prévisions
+    plt.figure(figsize=(12, 6))
+    plt.plot(system_data, label='Original')
+    plt.plot(sarima_forecast.index, sarima_forecast, linestyle='--', label=f'{systeme} Forecast')
+    plt.fill_between(sarima_forecast.index, forecast_conf_int.iloc[:, 0], forecast_conf_int.iloc[:, 1], color='pink', alpha=0.3, label=f'{systeme} Confidence Interval')
+    plt.title(f'SARIMA Forecast for {systeme}')
+    plt.xlabel('Date')
+    plt.ylabel('Prix Moyen (centimes de CHF)')
+    plt.legend()
+    plt.grid(True, linestyle='--')
+    plt.tight_layout()
+    plt.show()
+```
+
+Expliquer les résultats 
+
+
+# Holt-Winters exponential smoothing model 
 
 ```{python}
 import pandas as pd
