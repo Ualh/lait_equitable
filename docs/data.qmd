@@ -10,6 +10,54 @@
 ### Swiss Production
 ### Sources
 
+```{r}
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+```
+
+
+```{r setup}
+library(reticulate)
+use_virtualenv("/Users/raimon/Desktop/Github_repo/lait_equitable/test-project", required = TRUE)
+py_config()
+```
+
+```{r}
+library(reticulate)
+reticulate::repl_python()
+```
+
+
+
+```{r}
+library(reticulate)
+py_install(c("numpy", 
+             "pandas", 
+             "matplotlib", 
+             "seaborn",
+             "plotly",
+             "scikit-learn",
+             "datetime",
+             "statsmodels"))
+```
+
+
+```{python}
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import plotly.express as px
+import plotly.graph_objects as go
+import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
+from datetime import datetime
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.seasonal import seasonal_decompose
+import statsmodels.api as sm
+```
+
+
+
 ```{python}
 # import data
 data = pd.read_csv('../data/Données_marché_Lait.csv')
@@ -18,7 +66,6 @@ data.head()
 
 # Check the number of unique values in each column
 data.nunique()
-
 ```
 
 Source - https://www.donnees-agrimarche.ch/donnees
@@ -30,16 +77,21 @@ This data set shows the price of organic and conventional milk production from S
 ### Wrangling and Cleaning 
 
 We start by removing the columns with no value or unique value given that they are not relevant for our analysis. 
-After proceeding, we end up with a sub-data set of 9 variables.
+After proceeding, we end up with a sub-data set of 12 variables.
 Then, we calculate the number of missing values for each characteristics and filter out those without.
 
 ```{python}
-
 clean_data = data.copy()
 
 # Drop columns with unique values 
 clean_data = clean_data.drop(['Devise', 'Groupe de produits', 'Commerce extérieur', 'Indicateur',\
                    'Marché', 'Propriétés du produit', 'Unité', 'Echelon de création de valeur '], axis=1)
+
+clean_data.head()
+```
+
+```{python}
+import seaborn as sns
 
 # Calculate the number of NaN for each column and filter out those without NaN
 nan_counts = clean_data.isna().sum()
@@ -47,14 +99,17 @@ nan_counts = nan_counts[nan_counts > 0]
 print(nan_counts)
 
 # Create a barplot
-plt.figure(figsize=(10, 6))
+plt.figure(figsize=(12, 8))
 sns.barplot(x=nan_counts.index, y=nan_counts.values)
-plt.title('Nombre de valeurs manquantes par colonne')
-plt.xlabel('Colonnes')
-plt.ylabel('Nombre de NaN')
+plt.title('Number of Nan by column')
+plt.xlabel('Column')
+plt.ylabel('Number of NaN')
 
 plt.show()
+```
 
+
+```{python}
 # Calculate the percentage of NaN for each column of this cleaned data set 
 nan_percent = clean_data.isna().mean() * 100
 
