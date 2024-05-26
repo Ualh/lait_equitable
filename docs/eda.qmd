@@ -11,7 +11,6 @@ library(lubridate)
 library(plotly)
 ```
 
-
 The milk sold in Switzerland comes from 14 different places - 14 values in 'Product origin'.
 It would be interesting to see the distribution of the milk's origin in Switzerland, with the percentage of swiss milk (produced in Switzerland) and international milk.
 The histogram shows a higher percentage of milk comes from Switzerland than from imports.
@@ -252,16 +251,17 @@ We note a non-linear trend: a downward trend between 2001 and 2016 and an upward
 Then there is a fall in prices, both organic and conventional, until 2007, followed by a peak in 2008 and a second peak in 2014 for conventional milk.
 From 2020 onwards, prices start to rise again then remain fairly constant over the last two years.
 
+
 ```{r}
+library(tidyverse)
+library(plotly)
+
 # Convertir la colonne 'Date' en datetime
 swiss_production_data$Date <- as.Date(swiss_production_data$Date, format="%Y-%m-%d")
 
-# Ajouter une colonne 'Year' pour les années
-swiss_production_data$Year <- as.numeric(format(swiss_production_data$Date, "%Y"))
-
-# Calculer le prix moyen par système de production et par année
+# Calculer le prix moyen par système de production et par date
 average_price <- swiss_production_data %>%
-  group_by(`System.of.production`, Year) %>%
+  group_by(`System.of.production`, Date) %>%
   summarise(Price = mean(Price, na.rm = TRUE), .groups = 'drop')
 
 # Définir les couleurs pour chaque système de production
@@ -273,7 +273,7 @@ systems <- unique(average_price$`System.of.production`)
 for (system in systems) {
   subset <- filter(average_price, `System.of.production` == system)
   trace <- list(
-    x = subset$Year,
+    x = subset$Date,
     y = subset$Price,
     mode = 'lines',
     name = system,
@@ -289,17 +289,24 @@ for (trace in traces) {
   fig <- add_trace(fig, x = trace$x, y = trace$y, mode = trace$mode, name = trace$name, type = trace$type, line = trace$line)
 }
 
-# Ajouter des titres et des légendes, et ajuster les paramètres de l'axe x
+# Définir les années uniques pour l'axe x
+years <- unique(format(average_price$Date, "%Y"))
+
+# Ajouter des titres et des légendes, et ajuster les paramètres de l'axe x et y
 fig <- layout(fig,
-              title = 'Average Production Price by System of Production and Year',
+              title = 'Average Production Price by System of Production and Date',
               xaxis = list(
-                title = 'Year',
-                tickmode = 'linear',
-                dtick = 1,
+                title = 'Date',
+                tickmode = 'array',
+                tickvals = as.Date(paste0(years, "-01-01")),  # Afficher toutes les années
+                ticktext = years,
                 tickangle = -45,
                 tickfont = list(size = 10)
               ),
-              yaxis = list(title = 'Average Price in Centimes'),
+              yaxis = list(
+                title = 'Average Price in Centimes',
+                range = c(48, 105)  # Définir les limites de l'axe y
+              ),
               legend = list(title = list(text = 'System.of.Production')),
               margin = list(b = 100)  # Augmenter la marge inférieure pour les étiquettes pivotées
 )
@@ -307,6 +314,11 @@ fig <- layout(fig,
 # Afficher le graphique
 fig
 ```
+
+We can see that the average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk. 
+What's more, the 'unknown' data are highly correlated with the 'conventional' data. 
+We note a seasonality in the data, with a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024.
+Then there is a fall in prices, organic and conventional, until 2007, followed by a peak in 2008 (potential correlation with the 2008 crisis?) and a second peak in 2014 for conventional milk. 
 
 
 ##### Average price of milk production, by region and production system
