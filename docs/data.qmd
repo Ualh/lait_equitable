@@ -130,7 +130,7 @@ reactable(clean_data)
 The data covers the period from January 2001 to January 2024. 
 It provides information of the type of system of production : conventional, bio, or IP Swiss production of milk. 
 The origin and the sales region of the milk include Switzerland and its regions, as well as other international countries. This will enable us to carry out comparative analyses of Swiss and international milk prices.
-The 'Price' column represents the weighted average prices per quantity, mainly at the farm.
+The 'Price' column represents the weighted average prices per quantity, mainly at the farm. 
 
 ```{r}
 # Créez une table tibble avec des descriptions des variables
