@@ -6,7 +6,7 @@ In order to gain a better understanding of Lait Equitable sales, we're going to 
 The objective is to move from a macro-economic analysis to a micro-economic analysis with Fair Milk.
 The farm-gate price of milk is influenced by a number of factors, including milk production costs, the type of farming and the market situation in Switzerland and abroad, with demand tending to outstrip supply.
 The farmgate milk price is a weighted average of the prices actually paid to producers. 
-Since 2017, the annual average farmgate milk price has risen steadily, reaching 76.36 ct/kg in 2023, i.e. 1.04 ct/kg or 1.4% more than in 2022. This is the highest milk price since 2009. However, the increase in 2023 is considerably less than the 8% rise recorded in 2022. The rise in the farmgate milk price in 2023 is due, among other things, to the decline in milk production (-0.6%) and the increase in milk production costs. In 2023, the farmgate price for conventional milk was 75.12 ct/kg, up 1.2% on the previous year. The farmgate price for organic milk (all categories) was 91.06 ct/kg, an increase of 3.4% on the previous year. 
+Since 2017, the annual average farm gate milk price has risen steadily and continues its growth.
 
 ##### Distribution of swiss & international milk 
 
@@ -48,7 +48,7 @@ The histogram shows a higher percentage of CH milk than International Milk. This
 
 ##### Milk price trends by country
 
-We are going to show price trends by country and carry out a macroeconomic analysis. The column 'Product origin' has 14 different origins, which are shown below.
+We are going to show price trends by country and carry out a macroeconomic analysis. The column 'Product origin' has 10 different origins, which are shown below.
 
 ```{r}
 # Lire les données
@@ -76,9 +76,9 @@ fig <- plot_ly(data = average_price, x = ~Date, y = ~Average_Price, color = ~`Pr
 # Personnaliser la couleur pour la Suisse
 fig <- fig %>%
   layout(
-    title = 'Average milk production price by country and year',
+    title = 'Average milk price by country over time',
     xaxis = list(title = 'Year', tickformat = "%Y", dtick = "M12", tickangle = 45),
-    yaxis = list(title = 'Average milk production price'),
+    yaxis = list(title = 'Average price'),
     legend = list(title = list(text = 'Origin'), x = 1.05, y = 1),
     margin = list(l = 50, r = 50, t = 50, b = 50)
   )
