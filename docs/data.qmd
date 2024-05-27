@@ -14,6 +14,12 @@ editor:
 
 ### Market for dairy products in Switzerland
 
+The dairy market is an important sector of Swiss agriculture and the agri-food industry. The dairy industry accounts for around 20% of agricultural production. 
+
+Our data source is the Swiss Federal Office for Agriculture, OFAG. The dataset shows price trends on the dairy market at production level. The farmgate milk price is calculated on the basis of a monthly survey of the main milk buyers. These are the companies that buy milk directly from producers. International milk price trends are also shown for comparison purposes, we will look at this later.
+
+Source - https://www.donnees-agrimarche.ch/donnees
+
 ```{r}
 # Installer les packages nécessaires si ce n'est pas déjà fait
 if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
@@ -43,13 +49,7 @@ library(readr)
 
 #### Wrangling and Cleaning
 
-This data set shows the price of organic and conventional milk production from Switzerland and other countries over time.
-
-Source - https://www.donnees-agrimarche.ch/donnees
-
-We start by removing the columns with no value or unique value given that they are not relevant for our analysis.
-After proceeding, we end up with a sub-data set of 12 variables.
-Then, we calculate the number of missing values for each characteristics and filter out those without.
+We start by removing the columns with no value or unique value, and the variables that are not relevant for our analysis. After proceeding, we end up with a sub-data set of 6 variables.
 
 ```{r}
 # Importer les données
@@ -127,6 +127,11 @@ reactable(clean_data)
 
 #### Description
 
+The data covers the period from January 2001 to January 2024. 
+It provides information of the type of system of production : conventional, bio, or IP Swiss production of milk. 
+The origin and the sales region of the milk include Switzerland and its regions, as well as other international countries. This will enable us to carry out comparative analyses of Swiss and international milk prices.
+The 'Price' column represents the weighted average prices per quantity, mainly at the farm.
+
 ```{r}
 # Créez une table tibble avec des descriptions des variables
 variable_table <- tibble(
@@ -137,7 +142,7 @@ variable_table <- tibble(
     "The origin of the product.",
     "The subgroup to which the product belongs.",
     "The region where the product is sold.",
-    "The price of the product."
+    "The price in centimes of the product."
   )
 )
 
@@ -147,7 +152,10 @@ variable_table %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 ```
 
+
 #### Missing Values
+
+Then, we calculate the percentage of missing values for each characteristics and filter out those without. 
 
 ```{r}
 # Calculer le pourcentage de NaN pour chaque colonne
@@ -172,17 +180,18 @@ fig <- fig %>% layout(yaxis = list(range = c(0, 100), title = 'Percentage of NaN
 fig
 ```
 
-The columns with missing values are: Cost components, Production system, Sales region and Use mode.
-The 'Production system' variable has a higher percentage of missing values, around 37.6%.
+The columns with missing values on our sub data set are: Sales region and System of production.
+The 'System of production' has a higher percentage of missing values, around 37.6%.
 However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity.
-As for the other characteristics, their percentage of missing values is relatively low thus we keep them too.
+As for Sales region, the percentage of missing values is relatively low thus we keep it. 
+
 
 ### Swiss dairy products market
 
 #### Wrangling & Cleaning
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
-To do this, we are going to create a sub data set 'swiss_production_data' which includes all the Swiss production and sales regions.
+To do this, we are going to create a sub data set 'swiss_production_data' that will only keep the Swiss regions in 'Product origin'.
 
 ```{r}
 # Sélectionner les colonnes spécifiées
@@ -214,7 +223,10 @@ swiss_production_data <- read_csv("../data/swiss_production_data.csv", show_col_
 reactable(swiss_production_data)
 ```
 
-#### Definition
+
+#### Description
+
+Here is the geographical distribution of the 5 regions in Switzerland. 
 
 ```{r}
 # Créez une table tibble avec des descriptions des variables
@@ -233,6 +245,7 @@ table %>%
   kbl() %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 ```
+
 
 ### Wrangling and Cleaning
 
