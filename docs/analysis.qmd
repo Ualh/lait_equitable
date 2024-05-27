@@ -200,11 +200,11 @@ forecast_conventional_ets <- forecast(fit_conventional_ets, h = 12)
 
 # Tracer les prévisions
 autoplot(forecast_bio_ets) +
-  labs(title = "Forecasted Prices of Organic Milk (ETS)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Organic Milk (ETS)", x = "Date", y = "Average Price") +
   theme_minimal()
 
 autoplot(forecast_conventional_ets) +
-  labs(title = "Forecasted Prices of Non-Organic Milk (ETS)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Non-Organic Milk (ETS)", x = "Date", y = "Average Price") +
   theme_minimal()
 ```
 
@@ -235,11 +235,11 @@ forecast_conventional_hw <- forecast(fit_conventional_hw, h = 12)
 
 # Tracer les prévisions
 autoplot(forecast_bio_hw) +
-  labs(title = "Forecasted Prices of Organic Milk (Holt-Winters Multiplicative)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Organic Milk (Holt-Winters Multiplicative)", x = "Date", y = "Average Price") +
   theme_minimal()
 
 autoplot(forecast_conventional_hw) +
-  labs(title = "Forecasted Prices of Non-Organic Milk (Holt-Winters Multiplicative)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Non-Organic Milk (Holt-Winters Multiplicative)", x = "Date", y = "Average Price") +
   theme_minimal()
 ```
 
