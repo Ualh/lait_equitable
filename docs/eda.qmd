@@ -3,6 +3,8 @@
 #### General analysis of dairy products market 
 
 In order to gain a better understanding of Lait Equitable sales, we're going to start with a global analysis of the dairy market to get an idea of how milk prices work in Switzerland.
+The objective is to move from a macro-economic analysis to a micro-economic analysis with Fair Milk.
+The farm-gate price of milk is influenced by a number of factors, including milk production costs, the type of farming and the market situation in Switzerland and abroad, with demand tending to outstrip supply.
 The farmgate milk price is a weighted average of the prices actually paid to producers. 
 Since 2017, the annual average farmgate milk price has risen steadily, reaching 76.36 ct/kg in 2023, i.e. 1.04 ct/kg or 1.4% more than in 2022. This is the highest milk price since 2009. However, the increase in 2023 is considerably less than the 8% rise recorded in 2022. The rise in the farmgate milk price in 2023 is due, among other things, to the decline in milk production (-0.6%) and the increase in milk production costs. In 2023, the farmgate price for conventional milk was 75.12 ct/kg, up 1.2% on the previous year. The farmgate price for organic milk (all categories) was 91.06 ct/kg, an increase of 3.4% on the previous year. 
 
@@ -164,12 +166,12 @@ plotly_density <- ggplotly(gg_density, tooltip = c("x", "y", "color"))
 plotly_density
 ```
 
-The regions 5 and 1 are more expensive than other regions. The region 2 has the lowest price in Switzerland.
+The region 1 is the most expensive region in comparison to the others and the region 3 shows the lowest price in Switzerland.
 
 
 ##### Distribution of the production milk in kg by region
 
-We can see that regions 1, 2 and 4 produce a greater quantity of milk than regions 3 and 5.
+We will now analyse the distribution of kg of milk produced across the different regions. This will give us an overview of the regions with the highest production rates and therefore the most competitive regions in terms of production. 
 
 ```{r}
 # Installer les packages nécessaires si ce n'est pas déjà fait
@@ -215,18 +217,12 @@ fig <- ggplotly(p, tooltip = c("text"))
 fig
 ```
 
-
-
+Milk production is evenly distributed between regions 1, 2 and 4. However, regions 3 and 5 show lower production, particularly region 3. This distribution of production can be explained by the location of the regions.
 
 
 ##### Average milk price per system of production over time
 
-The average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk.
-The 'unknown' data are highly correlated with the 'conventional' data.
-We note a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024.We'll come back to this later in the report.
-Then there is a fall in prices, both organic and conventional, until 2007, followed by a peak in 2008 and a second peak in 2014 for conventional milk.
-From 2020 onwards, prices start to rise again then remain fairly constant over the last two years.
-
+For the multivariate analysis, we're going to focus on the production system and analyse the impact of the production system on price.
 
 ```{r}
 library(tidyverse)
@@ -291,13 +287,16 @@ fig <- layout(fig,
 fig
 ```
 
-We can see that the average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk. 
-What's more, the 'unknown' data are highly correlated with the 'conventional' data. 
-We note a seasonality in the data, with a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024.
-Then there is a fall in prices, organic and conventional, until 2007, followed by a peak in 2008 (potential correlation with the 2008 crisis?) and a second peak in 2014 for conventional milk. 
+
+An organic production system means higher prices as shown on the graph. The average price per kg of milk produced was higher in early 2001, around 83.5 cents for conventional milk production and almost 1.00 CHF for organic milk. The highest price recorded until now.
+The 'unknown' data are highly correlated with the 'conventional' data, the two curves are overlapping.
+There is a fall in prices until 2007, followed by a peak in 2008, which can be explained by the 2008 financial crisis.
+We note a seasonality and a trend patterns. The non-linear trend is upward since 2017. Does this trend will continue to go upward ? What are the future predictions for prices? We will answer this question in the Analysis section.
 
 
 ##### Average price of milk production, by region and production system
+
+This histogram provides a more in-depth analysis of production systems by region. 
 
 ```{r}
 
@@ -364,10 +363,7 @@ fig <- fig %>% layout(
 fig
 ```
 
-Regions 5 and 3 have not produced organic milk since 2001.
-Region 3 is the weakest region on the Swiss milk market, with lower production and a lower price than the other regions.
-This may be due to the location of the areas within this region.
-
+An interesting insight is that the region 3 and 5 do not have an organic production system since 2001. They only produce conventional milk. Region 3 is once again the poorest, showing the lowest milk production at a lower price over the whole period and with only one production system.
 
 
 ### Lait Equitable Products
