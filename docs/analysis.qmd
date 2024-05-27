@@ -5,7 +5,10 @@
 -   Competing approaches
 -   Justifications
 
-# Additive Decomposition of Milk Price in Switzerland
+
+
+# Decomposition of Milk Price in Switzerland
+
 
 ```{r}
 # Charger les packages nécessaires
@@ -16,7 +19,11 @@ library(ggplot2)
 
 # Importer les données
 swiss_decomposition <- read_csv('../data/swiss_production_data.csv', show_col_types = FALSE)
+```
 
+
+
+```{r}
 # Assurez-vous que les dates sont de type Date et que 'Date' est l'index
 swiss_decomposition <- swiss_decomposition %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
@@ -52,165 +59,15 @@ plot(decomposition$random, main = "Residual Component", ylab = "Residual")
 par(mfrow = c(1, 1))
 ```
 
-
-
-
-```{r}
-# Code R pour générer la décomposition additive
-fit_bio_add <- decompose(ts_bio, type = "additive")
-autoplot(fit_bio_add) +
-  labs(title = "Additive Decomposition of Organic Milk Prices", x = "Date", y = "")
-
-fit_conventional_add <- decompose(ts_conventional, type = "additive")
-autoplot(fit_conventional_add) +
-  labs(title = "Additive Decomposition of Non-Organic Milk Prices", x = "Date", y = "")
-```
-
-```{r}
-# Code R pour générer la décomposition multiplicative
-fit_bio_mult <- decompose(ts_bio, type = "multiplicative")
-autoplot(fit_bio_mult) +
-  labs(title = "Multiplicative Decomposition of Organic Milk Prices", x = "Date", y = "")
-
-fit_conventional_mult <- decompose(ts_conventional, type = "multiplicative")
-autoplot(fit_conventional_mult) +
-  labs(title = "Multiplicative Decomposition of Non-Organic Milk Prices", x = "Date", y = "")
-```
-
-There is no clear trend, it decreases and then increases with two peaks in 2008 and 2014.
-There is a clear seasonal component due to weather conditions or agricultural cycles.
-The residual component is relatively stable, but shows some peaks which could indicate anomalies or events not taken into account by the trend and seasonality model.
-
-To determine whether our milk price data are better represented by an additive or multiplicative model, we will combine a visual analysis of the time series decomposition with quantitative methods, i.e. by comparing the AICs of the two models.
-
-```{r}
-# Ajuster les modèles ETS additifs et multiplicatifs
-fit_bio_ets_add <- ets(ts_bio, model = "AAA")
-fit_bio_ets_mult <- ets(ts_bio, model = "MAM")
-
-fit_conventional_ets_add <- ets(ts_conventional, model = "AAA")
-fit_conventional_ets_mult <- ets(ts_conventional, model = "MAM")
-
-# Comparer les AICc
-aic_bio_add <- fit_bio_ets_add$aicc
-aic_bio_mult <- fit_bio_ets_mult$aicc
-
-aic_conventional_add <- fit_conventional_ets_add$aicc
-aic_conventional_mult <- fit_conventional_ets_mult$aicc
-
-# Afficher les résultats
-print(paste("AICc pour le modèle additif du lait bio : ", aic_bio_add))
-print(paste("AICc pour le modèle multiplicatif du lait bio : ", aic_bio_mult))
-print(paste("AICc pour le modèle additif du lait conventionnel : ", aic_conventional_add))
-print(paste("AICc pour le modèle multiplicatif du lait conventionnel : ", aic_conventional_mult))
-```
-Multiplicative models have lower AIC values, indicating a better fit than additive models.
-We will therefore use the multiplicative model in our subsequent analysis to best represent our forecasts.
-
-
-# SARIMA model 
-## ACF & PACF - including all system of production
-
-We will then run a SARIMA model. Before applying this model, we need to check the stationarity of the data (and particularly the residuals) and determine the optimum values for the model parameters: p, d, q, P, D and Q.
-To determine these parameters, we will use the graphs Autocorrelation Function ACF and Partial Autocorrelation Function PACF. These graphs will help us to identify the dependency structure in the data.
-
-```{r}
-# Charger les packages nécessaires
-library(tidyverse)
-library(lubridate)
-library(forecast)
-library(ggplot2)
-library(tseries)
-
-# Importer les données
-swiss_decomposition <- read_csv('../data/swiss_production_data.csv', show_col_types = FALSE)
-
-# Assurez-vous que les dates sont de type Date
-swiss_decomposition <- swiss_decomposition %>%
-  mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
-  arrange(Date)
-
-# Si vos données sont déjà mensuelles, il n'est pas nécessaire de les resampler. Vous pouvez les utiliser directement.
-# Calculez la moyenne des prix par mois (facultatif si vous avez plusieurs enregistrements par mois)
-data <- swiss_decomposition %>%
-  group_by(Date) %>%
-  summarise(Price = mean(Price, na.rm = TRUE), .groups = 'drop')
-
-# Convertir en série temporelle
-data_ts <- ts(data$Price, start = c(year(min(data$Date)), month(min(data$Date))), frequency = 12)
-
-# Tracer ACF et PACF pour la série originale
-par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
-
-acf(data_ts, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue")
-grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-
-pacf(data_ts, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue")
-grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-
-# Différenciation saisonnière pour supprimer la saisonnalité annuelle
-data_seasonal_diff <- diff(data_ts, lag = 12)
-
-# Différenciation simple pour supprimer la tendance
-data_diff <- diff(data_seasonal_diff)
-
-# Tracer ACF et PACF pour la série différenciée
-par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
-
-acf(data_diff, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue")
-grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-
-pacf(data_diff, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue")
-grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-
-# Ajuster le layout
-par(mfrow = c(1, 1))
-```
-
-
-The blue zone represents the confidence interval around the zero line, set at 95%. Values outside this zone are considered statistically significant. If one of the values in our dataset falls outside this interval, this means that the autocorrelation is strong (i.e. significantly different from zero).
-
-The y-axis represents the autocorrelation and partial autocorrelation coefficients.
- 
-The x-axis represents the lag. A lag of 1 means that autocorrelation is calculated between values at successive periods.
-
-The first two graphs show the ACF and PACF of the original time series. 
-The autocorrelation values are significant for several lags, indicating a trend or a seasonal component. The slow decay suggests that the data are not stationary. The presence of significant autocorrelation for many lags indicates a persistent trend in the data. This means that the series is non-stationary.
-The PACF shows significant peaks at the first lags, followed by a rapid decrease. This suggests that the effect of autocorrelation diminishes after a few lags.
-The first significant lags in the PACF suggest that a few autoregressive terms may be necessary to capture the structure in the data.
-
-The last two graphs show the ACF and PACF of the differentiated series.
-The differentiated series appears to be more stationary, as most of the autocorrelations are no longer significant. However, there may be some slight seasonality or residual effects.
-For PACF, the first lags show some significant values, but most of the values quickly fall within the confidence interval.
-The differentiated series shows a low-order autoregressive structure, suggesting that an ARIMA model with small parameters p and q may suffice.
-
-
 ## Overall SARIMA forecast 
 
-Now that we have analysed these dependencies, we can set the parameters we need to apply the SARIMA model:
-
-Differentiation (d) : Since the original series is not stationary and the differentiated series appears to be stationary, we will use d=1.
-Autoregressive order (p) : The first lag in the PACF is significant, so p=1.
-Moving average order (q): The ACF shows some significant lags, but they are not dominant, so q=1.
-
-For seasonal components:
-Seasonal differentiation (D): The data shows seasonality, so we use D=1.
-Seasonal autoregressive order (P): The first lags in the seasonal PACF show slight significance, so P=1.
-Seasonal moving average order (Q): Similar to q, we use Q=1.
-Seasonal period (S) : As the data are monthly, we use S=12.
-
-
 ```{r}
-# Charger les packages nécessaires
-library(tidyverse)
+# Assurez-vous que les dates sont de type Date et que 'Date' est l'index
+library(dplyr)
 library(lubridate)
 library(forecast)
 library(ggplot2)
 
-# Importer les données
-swiss_decomposition <- read_csv('/Users/raimon/Desktop/Github_repo/lait_equitable/data/swiss_production_data.csv', show_col_types = FALSE)
-
-# Assurez-vous que les dates sont de type Date et que 'Date' est l'index
 swiss_decomposition <- swiss_decomposition %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
   arrange(Date)
@@ -223,14 +80,8 @@ data <- swiss_decomposition %>%
 # Convertir en série temporelle
 data_ts <- ts(data$Price, start = c(year(min(data$Date)), month(min(data$Date))), frequency = 12)
 
-# Ajustement du modèle SARIMA
-sarima_model <- auto.arima(data_ts, seasonal = TRUE, 
-                           stepwise = FALSE, approximation = FALSE,
-                           D = 1, max.D = 1, 
-                           start.P = 1, start.Q = 1, 
-                           max.P = 1, max.Q = 1, 
-                           start.p = 1, start.q = 1, 
-                           max.p = 1, max.q = 1)
+# Ajustement du modèle SARIMA avec auto.arima pour sélectionner les meilleurs paramètres
+sarima_model <- auto.arima(data_ts, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
 
 # Prévision avec intervalles de confiance de 80 % et 95 %
 sarima_forecast <- forecast(sarima_model, h = 12, level = c(80, 95))
@@ -251,97 +102,22 @@ ggplot() +
   geom_ribbon(data = data_forecast, aes(x = Date, ymin = Lower80, ymax = Upper80), fill = "blue", alpha = 0.2) +
   geom_ribbon(data = data_forecast, aes(x = Date, ymin = Lower95, ymax = Upper95), fill = "blue", alpha = 0.1) +
   scale_x_date(date_breaks = "5 years", date_labels = "%Y") +
-  labs(title = 'Overall SARIMA Forecast', x = 'Date', y = 'Price') +
+  labs(title = 'Overall SARIMA Forecast', x = 'Date', y = 'Average Price') +
   theme_minimal() +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-
-
-
-## ACF & PACF for "Bio" & "Conventional"
-
-We're interested in seeing how the two production systems develop over the coming months. We apply ACF & PACF to each system of production : "Bio" and "Conventional".
-
-```{r}
-# Charger les packages nécessaires
-library(tidyverse)
-library(lubridate)
-library(forecast)
-library(ggplot2)
-
-# Importer les données
-swiss_decomposition <- read_csv('/Users/raimon/Desktop/Github_repo/lait_equitable/data/swiss_production_data.csv', show_col_types = FALSE)
-
-# Assurez-vous que les dates sont de type Date et que 'Date' est l'index
-swiss_decomposition <- swiss_decomposition %>%
-  mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
-  arrange(Date)
-
-# Définir les systèmes de production
-systemes_production <- c('Bio', 'Conventional')
-
-# Créer un graphique pour chaque système de production
-for (systeme in systemes_production) {
-  # Filtrer le DataFrame pour chaque système de production
-  system_data <- swiss_decomposition %>%
-    filter(`System of production` == systeme) %>%
-    group_by(Date = floor_date(Date, "month")) %>%
-    summarise(Price = mean(Price, na.rm = TRUE)) %>%
-    ungroup()
-  
-  # Convertir en série temporelle
-  system_ts <- ts(system_data$Price, start = c(year(min(system_data$Date)), month(min(system_data$Date))), frequency = 12)
-  
-  # Tracer ACF et PACF pour la série originale
-  par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(0, 0, 4, 0))
-  
-  acf(system_ts, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue", cex.axis = 0.8, cex.lab = 0.8)
-  grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-  
-  pacf(system_ts, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue", cex.axis = 0.8, cex.lab = 0.8)
-  grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-  
-  # Ajouter un titre commun avec une taille réduite
-  mtext(paste('Original Series -', systeme), outer = TRUE, cex = 1.2)
-  
-  # Différenciation saisonnière pour supprimer la saisonnalité annuelle
-  system_seasonal_diff <- diff(system_ts, lag = 12)
-  
-  # Différenciation simple pour supprimer la tendance
-  system_diff <- diff(system_seasonal_diff)
-  
-  # Tracer ACF et PACF pour la série différenciée
-  par(mfrow = c(2, 1), mar = c(4, 4, 2, 1), oma = c(0, 0, 4, 0))
-  
-  acf(system_diff, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue", cex.axis = 0.8, cex.lab = 0.8)
-  grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-  
-  pacf(system_diff, lag.max = 40, main = "", xlab = "Lags (Months)", col = "blue", cex.axis = 0.8, cex.lab = 0.8)
-  grid(nx = NULL, ny = NULL, col = "lightgray", lty = "dotted")
-  
-  # Ajouter un titre commun avec une taille réduite
-  mtext(paste('Differenciated Series -', systeme), outer = TRUE, cex = 1.2)
-  
-  # Ajuster le layout
-  par(mfrow = c(1, 1))
-}
-```
+The SARIMA model used provides a good approximation of historical trends and provides reasonable forecasts for 2024. 
+However, there are a few points to consider: 
+- relative price stability in the forecast despite historical variability.
+- confidence intervals show that there is some uncertainty around forecasts, indicating that it is prudent to consider a range of possible outcomes.
 
 
 ## SARIMA Forecast for "Bio" and "Conventional"
 
+We saw that our data showed a significant seasonal trend. The SARIMA model takes into account the seasonality of time series in its predictions. This is why the SARIMA model would be better suited to our data.
 
 ```{r}
-# Charger les packages nécessaires
-library(tidyverse)
-library(lubridate)
-library(forecast)
-library(ggplot2)
-
-# Importer les données
-swiss_decomposition <- read_csv('../data/swiss_production_data.csv', show_col_types = FALSE)
-
 # Assurez-vous que les dates sont de type Date et que 'Date' est l'index
 swiss_decomposition <- swiss_decomposition %>%
   mutate(Date = as.Date(Date, format = "%Y-%m-%d")) %>%
@@ -374,69 +150,17 @@ forecast_conventional_sarima <- forecast(fit_conventional_sarima, h = 12)
 
 # Tracer les prévisions
 autoplot(forecast_bio_sarima) +
-  labs(title = "Forecasted Prices of Organic Milk (SARIMA)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Organic Milk (SARIMA)", x = "Date", y = "Average Price") +
   theme_minimal()
 
 autoplot(forecast_conventional_sarima) +
-  labs(title = "Forecasted Prices of Non-Organic Milk (SARIMA)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
+  labs(title = "Forecasted Prices of Non-Organic Milk (SARIMA)", x = "Date", y = "Average Price") +
   theme_minimal()
 ```
 
-# SARIMAX 
-
-```{r}
-# Charger les packages nécessaires
-library(tidyverse)
-library(lubridate)
-library(forecast)
-library(ggplot2)
-
-# Filtrer les données pour les systèmes de production 'Bio' et 'Conventional'
-data_bio <- swiss_decomposition %>%
-  filter(`System of production` == 'Bio') %>%
-  group_by(Date = floor_date(Date, "month")) %>%
-  summarise(Price = mean(Price, na.rm = TRUE)) %>%
-  ungroup()
-
-data_conventional <- swiss_decomposition %>%
-  filter(`System of production` == 'Conventional') %>%
-  group_by(Date = floor_date(Date, "month")) %>%
-  summarise(Price = mean(Price, na.rm = TRUE)) %>%
-  ungroup()
-
-# Créer une variable exogène pour capturer l'effet de la crise de 2008
-data_bio <- data_bio %>%
-  mutate(Crisis2008 = ifelse(Date >= as.Date("2008-01-01") & Date <= as.Date("2010-01-01"), 1, 0))
-
-data_conventional <- data_conventional %>%
-  mutate(Crisis2008 = ifelse(Date >= as.Date("2008-01-01") & Date <= as.Date("2010-01-01"), 1, 0))
-
-# Convertir en série temporelle
-ts_bio <- ts(data_bio$Price, start = c(year(min(data_bio$Date)), month(min(data_bio$Date))), frequency = 12)
-ts_conventional <- ts(data_conventional$Price, start = c(year(min(data_conventional$Date)), month(min(data_conventional$Date))), frequency = 12)
-
-# Convertir la variable exogène en série temporelle
-exog_bio <- ts(data_bio$Crisis2008, start = c(year(min(data_bio$Date)), month(min(data_bio$Date))), frequency = 12)
-exog_conventional <- ts(data_conventional$Crisis2008, start = c(year(min(data_conventional$Date)), month(min(data_conventional$Date))), frequency = 12)
-
-# Ajuster les modèles SARIMAX
-fit_bio_sarimax <- auto.arima(ts_bio, xreg = exog_bio, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
-fit_conventional_sarimax <- auto.arima(ts_conventional, xreg = exog_conventional, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
-
-# Prévisions pour les 12 prochains mois avec la variable exogène
-future_exog <- rep(0, 12)  # Supposons pas de crise pour les 12 prochains mois
-forecast_bio_sarimax <- forecast(fit_bio_sarimax, xreg = future_exog, h = 12)
-forecast_conventional_sarimax <- forecast(fit_conventional_sarimax, xreg = future_exog, h = 12)
-
-# Tracer les prévisions
-autoplot(forecast_bio_sarimax) +
-  labs(title = "Forecasted Prices of Organic Milk (SARIMAX)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
-  theme_minimal()
-
-autoplot(forecast_conventional_sarimax) +
-  labs(title = "Forecasted Prices of Non-Organic Milk (SARIMAX)", x = "Date", y = "Prix Moyen (centimes de CHF)") +
-  theme_minimal()
-```
+For Organic Milk, price forecasts show a stable but slightly rising general trend.
+For Conventional Milk, price forecast shows a slight initial decline followed by stabilization.
+Confidence intervals for both types of milk indicate similar uncertainty around forecasts, with areas of moderate and high uncertainty.
 
 
 
@@ -484,9 +208,13 @@ autoplot(forecast_conventional_ets) +
   theme_minimal()
 ```
 
-# Holt-Winters
+For organic milk, the price forecasts show a stable overall trend, with a slight increase.
+For non organic milk, the price Forecasts show a slight initial fall, followed by stabilization.
 
-We apply the Holt-Winters model to predict the price over the next 12 months. This model is an extension of the simple exponential smoothing model. It takes trend and seasonality into account in its predictions for its two time series, since these two components play a crucial role as we have seen with the decomposition. We took seasonal = "multiplicative" as we demonstrated before.
+
+# Holt-Winters - a voir si on garde 
+
+We apply the Holt-Winters model to predict the price over the next 12 months. This model is an extension of the simple exponential smoothing model. It takes trend and seasonality into account in its predictions for its two time series, since these two components play a crucial role as we have seen with the decomposition. We took seasonal = "multiplicative" because the multiplicative model shows lower AIC values, indicating a better fit than additive models.
 
 ```{r}
 # Charger les packages nécessaires
@@ -516,6 +244,16 @@ autoplot(forecast_conventional_hw) +
 ```
 
 The Holt-Winters model predicts a higher price increase for organic milk. According to this graph, the price would rise to CHF 1 for the producer. The confidence interval rises to CHF 1.10, but does not fall below 87 centimes. For conventional milk, the forecasts fall less and rise more compared with the ETS model.
+For organic milk, the price forecasts show a stable overall trend, with a slight increase.
+For non organic milk, the price Forecasts show a slight initial fall, followed by stabilization.
+
+
+# Comparison of all forecastings 
+
+All four models effectively capture historical trends in organic and non-organic milk prices.
+Forecasts for 2024 are similar between the models, indicating upward trends for organic milk and stabilization for non-organic milk.
+Confidence intervals for all four models are similar, indicating moderate to high uncertainty.
+We observe that there are no major differences between the SARIMA, SARIMAX, ETS, and Holt-Winters Multiplicative models in the organic and non-organic milk price forecasts for 2024. 
 
 
 ## Forecasting Next Year Milk Prices
