@@ -2,20 +2,13 @@
 
 #### General analysis of dairy products market 
 
+In order to gain a better understanding of Lait Equitable sales, we're going to start with a global analysis of the dairy market to get an idea of how milk prices work in Switzerland.
+The farmgate milk price is a weighted average of the prices actually paid to producers. 
+Since 2017, the annual average farmgate milk price has risen steadily, reaching 76.36 ct/kg in 2023, i.e. 1.04 ct/kg or 1.4% more than in 2022. This is the highest milk price since 2009. However, the increase in 2023 is considerably less than the 8% rise recorded in 2022. The rise in the farmgate milk price in 2023 is due, among other things, to the decline in milk production (-0.6%) and the increase in milk production costs. In 2023, the farmgate price for conventional milk was 75.12 ct/kg, up 1.2% on the previous year. The farmgate price for organic milk (all categories) was 91.06 ct/kg, an increase of 3.4% on the previous year. 
+
 ##### Distribution of swiss & international milk 
 
-```{r}
-# Charger les packages nécessaires
-library(dplyr)
-library(lubridate)
-library(plotly)
-```
-
-The milk sold in Switzerland comes from 14 different places - 14 values in 'Product origin'.
-It would be interesting to see the distribution of the milk's origin in Switzerland, with the percentage of swiss milk (produced in Switzerland) and international milk.
-The histogram shows a higher percentage of milk comes from Switzerland than from imports.
-However the difference is small, less than 10%.
-This suggests that there are not many Swiss producers in comparison to the population.
+There are 2 types of milk: international milk and CH milk in the column 'Product subgroup'. It would be interesting to compare the percentages of these two types of milk in order to analyse whether the milk produced in Switzerland is significant or not.
 
 ```{r}
 # Lire les données
@@ -49,8 +42,11 @@ fig <- plot_ly(
 fig
 ```
 
+The histogram shows a higher percentage of CH milk than International Milk. This suggests that the Swiss dairy market is thriving. 
 
-##### Milk price trends by country and year
+##### Milk price trends by country
+
+We are going to show price trends by country and carry out a macroeconomic analysis. The column 'Product origin' has 14 different origins, which are shown below.
 
 ```{r}
 # Lire les données
@@ -99,11 +95,14 @@ fig <- fig %>%
 fig
 ```
 
+We can see that Switzerland is far superior to other countries in terms of price, over the entire period observed, from 2001 to 2024. Given that Switzerland is the most expensive of all the countries listed, this is not surprising. However, the difference in centimes remains significant, up to twice the price or more.
+
+
 
 #### Analysis of the Swiss dairy products market
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
-To do this, we are going to use the variable 'swiss_production_data' which includes all the Swiss production and sales regions.
+Now we're going to focus on Switzerland and its milk production. To do this, we are going to use our sub data set 'swiss_production_data'.
 
 ##### Distribution of milk cost for Switzerland
 
@@ -128,6 +127,8 @@ plotly_density <- ggplotly(gg_density)
 plotly_density
 ```
 
+
+This distribution, which covers all Swiss regions, gives an average price of around 75.25 centimes. The distribution is asymmetrical, with a more gradual rise to this value followed by an sharp fall.
 
 Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
 
@@ -163,36 +164,8 @@ plotly_density <- ggplotly(gg_density, tooltip = c("x", "y", "color"))
 plotly_density
 ```
 
-Regions 5 and 1 are more expensive than other regions.Region 3 has the lowest price in Switzerland.
-In order to explain this difference in density between the different regions, we are going to make a boxplot with the five regions.
+The regions 5 and 1 are more expensive than other regions. The region 2 has the lowest price in Switzerland.
 
-```{r}
-# Installer les packages nécessaires si ce n'est pas déjà fait
-if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
-if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
-
-# Charger les packages
-library(ggplot2)
-library(dplyr)
-
-# Définir la palette de couleurs pour chaque région
-palette <- c("Region 1" = "red", "Region 2" = "green", "Region 3" = "blue", "Region 4" = "orange", "Region 5" = "purple")
-
-# Création du boxplot
-ggplot(swiss_production_data, aes(x = `Product.origin`, y = Price, fill = `Product.origin`)) +
-  geom_boxplot() +
-  scale_fill_manual(values = palette) +
-  labs(
-    title = 'Boxplot of Prices by Region',
-    x = 'Sales regions',
-    y = 'Price in centimes',
-    fill = 'Sales regions'
-  ) +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-# Afficher le graphique
-```
 
 ##### Distribution of the production milk in kg by region
 
@@ -241,6 +214,9 @@ fig <- ggplotly(p, tooltip = c("text"))
 # Afficher le graphique
 fig
 ```
+
+
+
 
 
 ##### Average milk price per system of production over time
