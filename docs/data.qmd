@@ -127,9 +127,9 @@ reactable(clean_data)
 #### Description
 
 The data covers the period from January 2001 to January 2024. 
-It provides information of the type of system of production : conventional, bio, or IP Swiss production of milk. 
+It provides information about the system of production used : conventional, bio, or IP Swiss.
 The origin and the sales region of the milk include Switzerland and its regions, as well as other international countries. This will enable us to carry out comparative analyses of Swiss and international milk prices.
-The 'Price' column represents the weighted average prices per quantity, mainly at the farm. 
+The 'Price' column represents the weighted average prices in centimes per quantity, mainly at the farm. 
 
 ```{r}
 # Créez une table tibble avec des descriptions des variables
@@ -149,6 +149,22 @@ variable_table <- tibble(
 variable_table %>%
   kbl() %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+```
+
+
+#### Missing Values
+
+Then, we calculate the percentage of missing values for each characteristics and filter out those without.
+
+```{r}
+# Calculer le pourcentage de NaN pour chaque colonne
+nan_percent <- clean_data %>%
+  summarise(across(everything(), ~mean(is.na(.)) * 100)) %>%
+  pivot_longer(everything(), names_to = "Colonne", values_to = "Pourcentage_de_NaN")
+
+# Filtrer pour garder seulement les colonnes avec NaN
+nan_percent <- nan_percent %>%
+  filter(Pourcentage_de_NaN > 0)
 ```
 
 
