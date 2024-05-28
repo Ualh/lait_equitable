@@ -1,6 +1,6 @@
-### Exploratory data analysis
+# Exploratory Data Analysis
 
-#### General analysis of dairy products market 
+## General analysis of dairy products market 
 
 In order to gain a better understanding of Lait Equitable sales, we're going to start with a global analysis of the dairy market to get an idea of how milk prices work in Switzerland.
 The objective is to move from a macro-economic analysis to a micro-economic analysis with Lait Equitable.
@@ -8,13 +8,14 @@ The farm gate price of milk is influenced by a number of factors, including milk
 The farm gate milk price is a weighted average of the prices actually paid to producers. 
 Since 2017, the annual average farm gate milk price has risen steadily and continues its growth.
 
-##### Distribution of swiss & international milk 
+### Distribution of Swiss & International milk 
 
 There are 2 types of milk: international milk and CH milk in the column 'Product subgroup'. It would be interesting to compare the percentages of these two types of milk in order to analyse whether the quantity of milk produced in Switzerland is significant or not.
 
 
 ```{r}
 clean_data
+
 # Compter les occurrences
 occurrences <- clean_data %>%
   count(`Product subgroup`) %>%
@@ -46,7 +47,7 @@ fig
 The histogram shows a higher percentage of CH milk than International Milk. This suggests that the Swiss dairy market is thriving. 
 
 
-##### Milk price trends by country
+### Milk price trends by country
 
 We are going to show price trends by country and carry out a macroeconomic analysis. The column 'Product origin' has 10 different origins, which are shown below.
 
@@ -97,12 +98,12 @@ fig
 We can see that Switzerland is far superior to other countries in terms of price, over the entire period observed, from 2001 to 2024. Given that Switzerland is the most expensive of all the countries listed, this is not surprising. However, the difference in centimes remains significant, up to twice the price or more.
 
 
-#### Analysis of the Swiss dairy products market
+## Analysis of the Swiss dairy products market  
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
-Now we're going to focus on Switzerland and its milk production. To do this, we are going to use our sub data set 'swiss_production_data'.
+Now we're going to focus on Switzerland and its milk production. To do this, we are going to use our sub data set **'swiss_production_data'**.
 
-##### Distribution of milk cost for Switzerland
+### Distribution of milk cost for Switzerland
 
 ```{r}
 # Créer le graphique de densité
@@ -127,6 +128,8 @@ plotly_density
 This distribution, which covers all Swiss regions, gives an average price of around 75.25 centimes. The distribution is asymmetrical, with a more gradual rise to this value followed by an sharp fall.
 
 Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
+
+### Distribution of milk cost by region
 
 ```{r}
 # Définir la nouvelle palette de couleurs
@@ -164,19 +167,11 @@ plotly_density
 The region 1 is the most expensive region in comparison to the others and the region 3 shows the lowest price in Switzerland.
 
 
-##### Distribution of the production milk in kg by region
+### Distribution of milk production by region
 
-We will now analyse the distribution of kg of milk produced across the different regions. This will give us an overview of the regions with the highest production rates and therefore the most competitive regions in terms of production. 
+We will now analyse the distribution of kg of milk produced across the different regions. This will give us an overview of the regions with the highest production rates and therefore the most competitive regions in terms of quantity produced. 
 
 ```{r}
-# Installer les packages nécessaires si ce n'est pas déjà fait
-if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
-if (!requireNamespace("plotly", quietly = TRUE)) install.packages("plotly")
-
-# Charger les packages
-library(ggplot2)
-library(plotly)
-
 # Compter les occurrences de chaque type de produit
 product_counts <- as.data.frame(table(swiss_production_data$`Product origin`))
 names(product_counts) <- c("Product origin", "Count")
@@ -216,7 +211,7 @@ fig
 Milk production is evenly distributed between regions 1, 2 and 4. However, regions 3 and 5 show lower production, particularly region 3. This distribution of production can be explained by the location of the regions.
 
 
-##### Average milk price per system of production over time
+### Average milk price per system of production over time
 
 For the multivariate analysis, we're going to focus on the production system and analyse the impact of the production system on price over time.
 
@@ -288,7 +283,7 @@ There is a fall in prices until 2007, followed by a peak in 2008, which can be e
 We note a seasonality and a trend patterns. The non-linear trend is upward since 2017. Does this trend will continue to go upward ? What are the price predictions ? We will answer this question in the Analysis section.
 
 
-### Lait Equitable Products
+## Lait Equitable Products
 
 To provide a comprehensive understanding of Lait Equitable's sales trends throughout 2023, we performed a month-by-month sales analysis. This exploration helps identify seasonal effects, peak sales periods, and potential areas for strategic adjustments. Here’s a detailed breakdown of the approach and findings:
 
@@ -323,6 +318,7 @@ The graph shows total monthly sales across all locations for the "Lait Equitable
 -   Gradual Decline in Sales: As we move from left to right, there is a general trend of declining sales. After March, the next highest sales are in December, followed by April, May, and so on. This indicates that sales in March were not sustained throughout the year.
 -   Mid-year and End-Year Trends: While the graph is not in chronological order, it shows that some months like December (typically strong due to the holiday season) also performed well, but none reached the peak seen in March.
 -   Lower Sales in the Latter Months Displayed: The months at the right end of the graph, such as June and July, show the lowest sales figures in the year. This could indicate a seasonal dip or other market dynamics affecting these months. One supposition could be that people are on vacations at these dates due to school vacations.
+
 
 ### Sales Distribution Accross Locations
 
