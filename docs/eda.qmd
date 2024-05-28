@@ -12,21 +12,18 @@ Since 2017, the annual average farm gate milk price has risen steadily and conti
 
 There are 2 types of milk: international milk and CH milk in the column 'Product subgroup'. It would be interesting to compare the percentages of these two types of milk in order to analyse whether the quantity of milk produced in Switzerland is significant or not.
 
-```{r}
-swiss_production_data <- read.csv('../data/swiss_production_data.csv')
-```
-
 
 ```{r}
+clean_data
 # Compter les occurrences
 occurrences <- clean_data %>%
-  count(`Product.subgroup`) %>%
-  rename(`Product.subgroup` = `Product.subgroup`, `Nombre d'occurrences` = n)
+  count(`Product subgroup`) %>%
+  rename(`Product subgroup` = `Product subgroup`, `Nombre d'occurrences` = n)
 
 # Créer l'histogramme interactif avec Plotly
 fig <- plot_ly(
   data = occurrences, 
-  x = ~`Product.subgroup`, 
+  x = ~`Product subgroup`, 
   y = ~`Nombre d'occurrences`, 
   type = 'bar', 
   text = ~`Nombre d'occurrences`,
@@ -59,19 +56,19 @@ regions_to_exclude <- c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 
 
 # Filtrer les données en excluant ces valeurs
 filtered_data <- clean_data %>%
-  filter(!`Product.origin` %in% regions_to_exclude)
+  filter(!`Product origin` %in% regions_to_exclude)
 
 # Convertir la colonne 'Date' en format Date si nécessaire
 filtered_data$Date <- ymd(filtered_data$Date)
 
 # Calculer le prix moyen par 'Product origin' et 'Date'
 average_price <- filtered_data %>%
-  group_by(`Product.origin`, Date) %>%
+  group_by(`Product origin`, Date) %>%
   summarise(Average_Price = mean(Price, na.rm = TRUE), .groups = 'drop') %>%
   ungroup()
 
 # Créer un graphique interactif avec Plotly
-fig <- plot_ly(data = average_price, x = ~Date, y = ~Average_Price, color = ~`Product.origin`, type = 'scatter', mode = 'lines')
+fig <- plot_ly(data = average_price, x = ~Date, y = ~Average_Price, color = ~`Product origin`, type = 'scatter', mode = 'lines')
 
 # Personnaliser la couleur pour la Suisse
 fig <- fig %>%
@@ -86,7 +83,7 @@ fig <- fig %>%
 # Mettre en évidence la Suisse en rose
 fig <- fig %>%
   add_trace(
-    data = average_price %>% filter(`Product.origin` == "Switzerland"),
+    data = average_price %>% filter(`Product origin` == "Switzerland"),
     x = ~Date, y = ~Average_Price,
     type = 'scatter', mode = 'lines',
     line = list(color = 'pink'),
@@ -136,14 +133,14 @@ Given that the sample size differs for each region, we represent the distributio
 palette <- c("red", "green", "blue", "orange", "purple")
 
 # Tri des régions
-regions_sorted <- sort(unique(swiss_production_data$`Product.origin`))
+regions_sorted <- sort(unique(swiss_production_data$`Product origin`))
 
 # Ajouter une colonne 'Color' pour assigner une couleur à chaque région
 swiss_production_data <- swiss_production_data %>%
-  mutate(Color = factor(`Product.origin`, levels = regions_sorted, labels = palette))
+  mutate(Color = factor(`Product origin`, levels = regions_sorted, labels = palette))
 
 # Créer le graphique de densité
-gg_density <- ggplot(swiss_production_data, aes(x = Price, color = `Product.origin`, fill = `Product.origin`)) +
+gg_density <- ggplot(swiss_production_data, aes(x = Price, color = `Product origin`, fill = `Product origin`)) +
   geom_density(alpha = 0.5) +
   scale_fill_manual(values = palette) +
   scale_color_manual(values = palette) +
@@ -181,14 +178,14 @@ library(ggplot2)
 library(plotly)
 
 # Compter les occurrences de chaque type de produit
-product_counts <- as.data.frame(table(swiss_production_data$`Product.origin`))
-names(product_counts) <- c("Product.origin", "Count")
+product_counts <- as.data.frame(table(swiss_production_data$`Product origin`))
+names(product_counts) <- c("Product origin", "Count")
 
 # Définir l'ordre désiré des régions
 order <- c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5')
 
 # Réindexer les données dans l'ordre désiré
-product_counts$`Product.origin` <- factor(product_counts$`Product.origin`, levels = order)
+product_counts$`Product origin` <- factor(product_counts$`Product origin`, levels = order)
 
 # Ajuster les couleurs pour les rendre plus claires
 adjusted_colors <- c(
@@ -200,7 +197,7 @@ adjusted_colors <- c(
 )
 
 # Créer un bar chart avec ggplot2
-p <- ggplot(product_counts, aes(x = `Product.origin`, y = Count, fill = `Product.origin`, text = paste("Product.origin:", `Product.origin`, "<br>Count:", Count))) +
+p <- ggplot(product_counts, aes(x = `Product origin`, y = Count, fill = `Product origin`, text = paste("Product origin:", `Product origin`, "<br>Count:", Count))) +
   geom_bar(stat = "identity") +
   scale_fill_manual(values = adjusted_colors) +
   labs(title = 'Distribution of milk production in Switzerland', x = 'Product origin', y = 'Number of Occurrences') +
@@ -229,7 +226,7 @@ swiss_production_data$Date <- as.Date(swiss_production_data$Date, format="%Y-%m-
 
 # Calculer le prix moyen par système de production et par date
 average_price <- swiss_production_data %>%
-  group_by(`System.of.production`, Date) %>%
+  group_by(`System of production`, Date) %>%
   summarise(Price = mean(Price, na.rm = TRUE), .groups = 'drop')
 
 # Définir les couleurs pour chaque système de production
@@ -237,9 +234,9 @@ colors <- c("Bio" = "green", "Conventional" = "orange", "Unknown" = "blue")
 
 # Créer une liste de traces pour chaque système de production
 traces <- list()
-systems <- unique(average_price$`System.of.production`)
+systems <- unique(average_price$`System of production`)
 for (system in systems) {
-  subset <- filter(average_price, `System.of.production` == system)
+  subset <- filter(average_price, `System of production` == system)
   trace <- list(
     x = subset$Date,
     y = subset$Price,
