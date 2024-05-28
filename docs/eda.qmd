@@ -35,7 +35,7 @@ fig <- plot_ly(
     title = 'Occurrence of CH milk and International milk',
     xaxis = list(title = 'Product subgroup'),
     yaxis = list(title = 'Frequency'),
-    margin = list(l = 100, r = 100, t = 50, b = 50), width = 400, height = 400
+    width = 400, height = 400
   )
 
 # Afficher le graphique
@@ -76,7 +76,7 @@ fig <- fig %>%
     xaxis = list(title = 'Year', tickformat = "%Y", dtick = "M12", tickangle = 45),
     yaxis = list(title = 'Average price'),
     legend = list(title = list(text = 'Origin'), x = 1.05, y = 1),
-    margin = list(l = 50, r = 50, t = 50, b = 50), width = 800, height = 400
+    width = 800, height = 400
   )
 
 # Mettre en évidence la Suisse en rose
@@ -162,7 +162,7 @@ plotly_density <- ggplotly(gg_density, tooltip = c("x", "y", "color")) %>%
 plotly_density
 ```
 
-The region 1 is the most expensive region in comparison to the others and the region 3 shows the lowest price in Switzerland.
+The region 1 is the most expensive region in comparison to the others and the region 3 shows the lowest price in Switzerland. (**see table of region above for details**)
 
 
 ### Distribution of milk production by region
@@ -206,7 +206,7 @@ fig <- ggplotly(p, tooltip = c("text")) %>%
 fig
 ```
 
-Milk production is evenly distributed between regions 1, 2 and 4. However, regions 3 and 5 show lower production, particularly region 3. This distribution of production can be explained by the location of the regions.
+Milk production is evenly distributed between regions 1, 2 and 4. However, regions 3 and 5 show lower production, particularly region 3. This distribution of production can be explained by the location of the regions. (**see table of region above for details**)
 
 
 ### Average milk price per system of production over time
@@ -559,3 +559,7 @@ folium.LayerControl().add_to(m)
 m.save('combined_product_map.html')
 m
 ```
+
+This map shows that a high concentration of producers is located in the central-west of Switzerland, particularly around the cities of Lausanne, Fribourg, and Bern. The sales locations of Lait Equitable products are more widespread, with a higher density in the western part of the country, including cities like Geneva, Lausanne, and Vevey.  This correlation could suggest a strategic advantage in terms of sourcing and distribution efficiency in these areas. The map provides a visual representation of the proximity between producers and sales locations, highlighting potential areas for strategic partnerships or marketing initiatives.
+
+The south and the east of Switzerland have fewer producers and sales locations, indicating potential opportunities for expansion or targeted marketing efforts in these regions. 

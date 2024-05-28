@@ -494,6 +494,7 @@ Does being close to a Producer influence Sales ?
 What we do here is to calculate a distance matrix in order to determine the proximity of each city to the producers. We then analyze the correlation between the total sales and the minimum distance to the producer. This analysis helps us understand if the proximity to the producer has any significant impact on the sales of Lait Equitable products.
 
 The distance Matrix is shown as follow : 
+
 ```{python}
 from geopy.distance import geodesic
 latitudes = []
@@ -531,6 +532,7 @@ for city in cities:
 # Flatten the DataFrame to get all distance values in one series
 all_distances = distance_matrix.values.flatten()
 ```
+
 
 ```{r}
 #get the distance_matrix in r
