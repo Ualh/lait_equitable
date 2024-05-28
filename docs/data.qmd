@@ -1,632 +1,189 @@
 # Data
+## Market for dairy products in Switzerland
 
--   Sources
--   Description
--   Wrangling/cleaning
--   Spotting mistakes and missing data (could be part of EDA too)
--   Listing anomalies and outliers (could be part of EDA too)
+The dairy market is an important sector of Swiss agriculture and the agri-food industry. The dairy industry accounts for around 20% of agricultural production. 
 
+Our data source is the Swiss Federal Office for Agriculture, OFAG. The dataset shows price trends on the dairy market at production level. The farmgate milk price is calculated on the basis of a monthly survey of the main milk buyers. These are the companies that buy milk directly from producers. International milk price trends are also shown for comparison purposes, we will look at this later.
 
-### Swiss Production
-### Sources
-
-```{python}
-# import data
-data = pd.read_csv('../data/Données_marché_Lait.csv')
-print('Dataset length:', len(data))
-data.head()
-
-# Check the number of unique values in each column
-data.nunique()
-
-```
-
-Source - https://www.donnees-agrimarche.ch/donnees
-
-### Description
-
-This data set shows the price of organic and conventional milk production from Switzerland and other countries over time.
+Source - [agrimarche](https://www.donnees-agrimarche.ch/donnees)
 
 ### Wrangling and Cleaning 
 
-We start by removing the columns with no value or unique value given that they are not relevant for our analysis. 
-After proceeding, we end up with a sub-data set of 9 variables.
-Then, we calculate the number of missing values for each characteristics and filter out those without.
-
-```{python}
-clean_data = data.copy()
-
-# Drop columns with unique values 
-clean_data = clean_data.drop(['Devise', 'Groupe de produits', 'Commerce extérieur', 'Indicateur',\
-                   'Marché', 'Propriétés du produit', 'Unité', 'Echelon de création de valeur '], axis=1)
-
-# Calculate the number of NaN for each column and filter out those without NaN
-nan_counts = clean_data.isna().sum()
-nan_counts = nan_counts[nan_counts > 0]
-print(nan_counts)
-
-# Create a barplot
-plt.figure(figsize=(10, 6))
-sns.barplot(x=nan_counts.index, y=nan_counts.values)
-plt.title('Nombre de valeurs manquantes par colonne')
-plt.xlabel('Colonnes')
-plt.ylabel('Nombre de NaN')
-
-plt.show()
-
-# Calculate the percentage of NaN for each column of this cleaned data set 
-nan_percent = clean_data.isna().mean() * 100
-
-# Filter to keep only columns with NaN
-nan_percent = nan_percent[nan_percent > 0].reset_index()
-nan_percent.columns = ['Colonne', 'Pourcentage de NaN']
-
-# Create an interactive graph with Plotly
-fig = px.bar(nan_percent, x='Colonne', y='Pourcentage de NaN',
-             text='Pourcentage de NaN')
-
-fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
-fig.update_yaxes(range=[0, 100])
-fig.update_layout(title_text='Pourcentage de valeurs manquantes par colonne',
-                  yaxis_title='Pourcentage de NaN',
-                  xaxis_title='Colonne')
-fig.show()
-```
-
-The columns with missing values are: Cost components, Production system, Sales region and Use mode.
-The 'Production system' variable has a higher percentage of missing values, around 37.6%. However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity. 
-As for the other characteristics, their percentage of missing values is relatively low thus we keep them too.
-
-### General Analysis - All Countries
-## Milk Production by country 
-
-The milk sold in Switzerland comes from 14 different places - 14 values in 'Origin of product'. It would be interesting to see the distribution of the origin of milk in Switzerland, with the percentage of milk coming from Switzerland and the percentage of milk not coming from Switzerland.
-We create a new variable 'swiss_production_data' including all five Swiss regions. Then, we group all non-Swiss origins together in another category. This gives us:
-
-```{python}
-
-# create a new variable including all Swiss regions
-swiss_production_data = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'] 
-
-# Create a new column for classification
-clean_data['Provenance'] = clean_data['Provenance du produit'].apply(lambda x: 'Suisse' if x in swiss_production_data else 'Etranger')
-
-# Calculate percentage for both categories
-category_counts = clean_data['Provenance'].value_counts(normalize=True) * 100
-
-# Plot the distribution
-plt.figure(figsize=(8, 4))
-plt.bar(category_counts.index, category_counts.values, color=['blue', 'red'])
-plt.xlabel('Origin')
-plt.ylabel('Percentage (%)')
-plt.title('Distribution between Swiss and foreign milk')
-plt.ylim(0, 100)  
-plt.show()
-
-print(category_counts)
-
-```
-
-The histogram shows a higher percentage of milk comes from Switzerland than from imports. However the difference is small, less than 10%.
-This suggests that there are not many Swiss producers in comparison to the population.
-
-## Milk Price by country 
-
-Now that we've compared the distribution of production, we'll compare the distribution of the price of milk by country.
-
-```{python}
-
-# Convert date from string to datetime
-clean_data['Date'] = pd.to_datetime(clean_data['Date'])
-
-# Replace the country names with 'Group'
-clean_data['Provenance du produit'] = clean_data['Provenance du produit'].replace(swiss_production_data, 'Suisse')
-
-# Group the data by 'Origin of product' & 'Date' and calculate the average price. 
-prix_moyen_par_pays_et_annee = clean_data.groupby(['Provenance du produit', 'Date'])['Prix'].mean().reset_index()
-
-# Plot
-plt.figure(figsize=(12, 6))
-# Loop over each country to trace it
-for pays in prix_moyen_par_pays_et_annee['Provenance du produit'].unique():
-    subset = prix_moyen_par_pays_et_annee[prix_moyen_par_pays_et_annee['Provenance du produit'] == pays]
-    plt.plot(subset['Date'], subset['Prix'], label=pays)
-    
-plt.legend()
-plt.title('Average milk production price by country and year')
-plt.xlabel('Year')
-plt.ylabel('Average milk production price')
-plt.legend(title='Origin', bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.xticks(rotation=45)
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-plt.gca().xaxis.set_major_locator(mdates.YearLocator()) 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y')) 
-
-plt.tight_layout()  
-plt.show()
-
-```
-
-We observe from this plot that producing milk in Switzerland is much more expensive than in other countries.
-
-### Univariate Analysis - Switzerland
-
-The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration. 
-To do this, we are going to use the variable 'swiss_production_data' which includes all the Swiss production and sales regions.
-
-## Distribution of milk production for each Swiss region.
-
-# créer un tableau affichant les régions
-
-```{python}
-# Count the occurrences of each type of product
-product_counts = swiss_production_data['Provenance du produit'].value_counts()
-
-# Define the desired order of regions
-order = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']
-
-# Re-index the data in the desired order
-product_counts = product_counts.reindex(order)
-
-# Create a bar chart
-plt.figure(figsize=(10, 6))
-bars = plt.bar(product_counts.index, product_counts.values, color=['red', 'green', 'blue', 'orange', 'purple'])
-
-# Detailed descriptions for each region 
-labels = ['Région 1 : Genève, Vaud, Fribourg, Neuchâtel, Jura', 
-          'Région 2 : Berne, Lucerne, Unterwald, Uri, Zoug and Schwyz', 
-          'Région 3 : Bâle-Campagne & Bâle-Ville, Argovie and Soleure.',
-          'Région 4 : Zurich, Schaffhouse, Thurgovie, Appenzell, St.-Gall, Schwyz, Glaris and Grisons',
-          'Région 5 : Valais and Tessin.']
-
-for bar, label in zip(bars, labels):
-    bar.set_label(label)
-    
-plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-
-plt.title('Distribution de la production de lait en Suisse')
-plt.xlabel('Provenance du lait')
-plt.ylabel('Nombre d’Occurrences')
-
-plt.show()
-
-print(product_counts)
-```
-
-We can see that regions 1, 2 and 4 produce a greater quantity of milk than regions 3 and 5. 
-
-## Cost of production 
-
-Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
-
-```{python}
-swiss_histogram = pd.read_csv('Swiss_Production.csv')
-
-# plot distribution of the cost of production, all regions combined.
-plt.hist(swiss_histogram['Prix'], bins=50, density=True, alpha=0.5)
-plt.xlabel('Price in centimes')
-plt.ylabel('Density')
-plt.title('Distribution of the cost of production in Switzerland')
-plt.show()
-
-```
-
-Regions 5 and 1 are more expensive than other regions. Region 3 has the lowest price in Switzerland.
-In order to explain this difference in density between the different regions, we are going to make a boxplot with the five regions.
-
-```{python}
-# plot la dispersion des prix pour chaque région, pour potentiellement permettre d'expliquer cet écart de densité.
-sns.boxplot(x='Origin', y='Price', data=swiss_production_data)
-plt.title('Price distribution by region')
-plt.show()
-```
-
-Regions 1 and 3 show greater price stability with shorter boxes, indicating less dispersion. Regions 5 and 4 show greater price volatility, as indicated by wider price ranges and the presence of outliers.
-
-### Multivariate Analysis - Switzerland
-## Average milk price per system of production over time
-
-```{python}
-# plot "l'évolution du prix moyen de production en fonction du système de production"
-# Calculer la moyenne des prix pour chaque date et chaque système de production
-swiss_production_data_moyenne = swiss_production_data.groupby(['Date', 'Système de production'])['Prix'].mean().reset_index()
-
-# Sélectionner les systèmes de production uniques
-systemes_production = swiss_production_data['Système de production'].unique()
-
-# Créer un graphique pour chaque système de production
-plt.figure(figsize=(12, 6))  # Ajuste la taille du graphique selon tes besoins
-
-for systeme in systemes_production:
-
-    # Filtrer le DataFrame pour chaque système de production
-    swiss_production_data_filtre = swiss_production_data_moyenne[swiss_production_data_moyenne['Système de production'] == systeme]
- 
-    # Tracer la courbe pour le système de production filtré
-    plt.plot(swiss_production_data_filtre['Date'], swiss_production_data_filtre['Prix'],marker='.', linestyle='-', label=systeme)
-
-# Ajout des légendes, titres et étiquettes
-plt.title('Évolution du prix moyen par système de production en Suisse')
-plt.xlabel('Date')
-plt.ylabel('Prix Moyen (centimes de CHF)')
-plt.legend(title='Système de production', bbox_to_anchor=(1.05, 1), loc='upper left')  # Ajoute une légende pour distinguer les systèmes et déplace la à l'extérieur
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-plt.xticks(rotation=45)  # Rotation des étiquettes pour les rendre lisibles
-
-plt.tight_layout()  # Ajuste la disposition
-plt.show()  # Affiche le graphique
-```
-
-The average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk. 
-The 'unknown' data are highly correlated with the 'conventional' data. 
-We note a seasonality in the data, with a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024.We'll come back to this later in the report.
-Then there is a fall in prices, both organic and conventional, until 2007, followed by a peak in 2008 (a potential correlation with the 2008 crisis?) and a second peak in 2014 for conventional milk. 
-From 2020 onwards, prices start to rise again then remain fairly constant over the last two years.
-
-
-## Average price of milk production, by region and production system
-
-```{python}
-
-swiss_production_data = pd.read_csv('Swiss_Production.csv')
-swiss_production_data['Date'] = pd.to_datetime(swiss_production_data['Date']).dt.year
-swiss_production_data = swiss_production_data[swiss_production_data['Date'].between(2001, 2024)]
-
-swiss_production_data.sort_values(by=['Provenance du produit', 'Date'], inplace=True)
-
-swiss_production_data['Provenance du produit'] = pd.Categorical(swiss_production_data['Provenance du produit'],
-                                                             categories=['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'],
-                                                             ordered=True)
-
-fig = px.bar(
-    swiss_production_data, 
-    x='Provenance du produit', 
-    y='Prix', 
-    color='Système de production', 
-    barmode='group',
-    animation_frame='Date',
-     category_orders={"Provenance du Lait": ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']}
-)
-
-fig.update_layout(
-    title_text='Average price of milk production, by region and production system',
-    xaxis_title='Origin',
-    yaxis_title='Average Price in centimes',
-)
-
-fig.update_traces(
-    hovertemplate='Provenance du produit: %{x}<br>Système de production: %{marker.color}<br>Date: %{animation_frame}<br>Prix:%{y}'
-    )
-    
-years = swiss_production_data['Date'].unique()
-steps = []
-for year in years:
-    step = dict(
-        method='animate',
-        label=str(year),
-        args=[[str(year)], {'frame': {'duration': 300, 'redraw': True}, 'mode': 'immediate'}]
-    )
-    steps.append(step)
-
-# Add the slider to the figure.
-fig.update_layout(
-    sliders=[{'steps': steps}]
-)
-
-fig.layout.updatemenus[0].buttons = []
-
-fig.show()
-
-```
-
-Regions 5 and 3 have not produced organic milk since 2001. Region 3 also produces less milk on average.
-
-
-### Swiss Producer
-## Description
-
-```{python}
-# import data
-data = pd.read_csv('../data/Données_marché_Lait.csv')
-print('Dataset length:', len(data))
-data.head()
-
-# Check the number of unique values in each column
-data.nunique()
-```
-This data set shows the price of organic and conventional milk production from Switzerland and other countries over time.
-
-Source - [Agrimarche](https://www.donnees-agrimarche.ch/donnees)
-
-## Wrangling and Cleaning 
-
-We start by removing the columns with no value or unique value given that they are not relevant for our analysis. 
-After proceeding, we end up with a sub-data set of 9 variables.
-Then, we calculate the number of missing values for each characteristics and filter out those without.
-
-```{python}
-clean_data = data.copy()
-
-# Drop columns with unique values 
-clean_data = clean_data.drop(['Devise', 'Groupe de produits', 'Commerce extérieur', 'Indicateur',\
-                   'Marché', 'Propriétés du produit', 'Unité', 'Echelon de création de valeur '], axis=1)
-
-# Calculate the number of NaN for each column and filter out those without NaN
-nan_counts = clean_data.isna().sum()
-nan_counts = nan_counts[nan_counts > 0]
-print(nan_counts)
-
-# Create a barplot
-plt.figure(figsize=(10, 6))
-sns.barplot(x=nan_counts.index, y=nan_counts.values)
-plt.title('Nombre de valeurs manquantes par colonne')
-plt.xlabel('Colonnes')
-plt.ylabel('Nombre de NaN')
-
-plt.show()
-
-# Calculate the percentage of NaN for each column of this cleaned data set 
-nan_percent = clean_data.isna().mean() * 100
-
-# Filter to keep only columns with NaN
-nan_percent = nan_percent[nan_percent > 0].reset_index()
-nan_percent.columns = ['Colonne', 'Pourcentage de NaN']
-
-# Create an interactive graph with Plotly
-fig = px.bar(nan_percent, x='Colonne', y='Pourcentage de NaN',
-             text='Pourcentage de NaN')
-
-fig.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
-fig.update_yaxes(range=[0, 100])
-fig.update_layout(title_text='Pourcentage de valeurs manquantes par colonne',
-                  yaxis_title='Pourcentage de NaN',
-                  xaxis_title='Colonne')
-                  
-#show plot
-fig.show()
-```
-The columns with missing values are: Cost components, Production system, Sales region and Use mode.
-The 'Production system' variable has a higher percentage of missing values, around 37.6%. However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity. 
-As for the other characteristics, their percentage of missing values is relatively low thus we keep them too.
-
-## General Analysis - All Countries
-# Milk Production in Switzerland VS others 
-
-The milk sold in Switzerland comes from 14 different places - 14 values in 'Origin of product'. It would be interesting to see the distribution of the origin of milk in Switzerland, with the percentage of milk coming from Switzerland and the percentage of milk not coming from Switzerland.
-We create a new variable 'swiss_production_data' including all five Swiss regions. Then, we group all non-Swiss origins together in another category. This gives us:
-
-```{python}
-# create a new variable including all Swiss regions
-swiss_production_data = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'] 
-
-# Create a new column for classification
-clean_data['Provenance'] = clean_data['Provenance du produit'].apply(lambda x: 'Suisse' if x in swiss_production_data else 'Etranger')
-
-# Calculate percentage for both categories
-category_counts = clean_data['Provenance'].value_counts(normalize=True) * 100
-
-# Plot the distribution
-#use viridis palette colors
-plt.figure(figsize=(8, 4))
-plt.bar(category_counts.index, category_counts.values, color=['blue', 'red'])
-plt.xlabel('Origin')
-plt.ylabel('Percentage (%)')
-plt.title('Distribution between Swiss and foreign milk')
-plt.ylim(0, 100)  
-plt.show()
-```
-
-The histogram shows a higher percentage of milk comes from Switzerland than from imports. However the difference is small, less than 10%.
-This suggests that there are not many Swiss producers in comparison to the population.
-
-# Milk Price by country 
-
-Now that we've compared the distribution of production, we'll compare the distribution of the price of milk by country.
-
-```{python}
-# Convert date from string to datetime
-clean_data['Date'] = pd.to_datetime(clean_data['Date'])
-
-# Replace the country names with 'Group'
-clean_data['Provenance du produit'] = clean_data['Provenance du produit'].replace(swiss_production_data, 'Suisse')
-
-# Group the data by 'Origin of product' & 'Date' and calculate the average price. 
-prix_moyen_par_pays_et_annee = clean_data.groupby(['Provenance du produit', 'Date'])['Prix'].mean().reset_index()
-
-# Plot
-plt.figure(figsize=(12, 6))
-# Loop over each country to trace it
-for pays in prix_moyen_par_pays_et_annee['Provenance du produit'].unique():
-    subset = prix_moyen_par_pays_et_annee[prix_moyen_par_pays_et_annee['Provenance du produit'] == pays]
-    plt.plot(subset['Date'], subset['Prix'], label=pays)
-    
-plt.legend()
-plt.title('Average milk production price by country and year')
-plt.xlabel('Year')
-plt.ylabel('Average milk production price')
-plt.legend(title='Origin', bbox_to_anchor=(1.05, 1), loc='upper left')
-plt.xticks(rotation=45)
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-
-plt.gca().xaxis.set_major_locator(mdates.YearLocator()) 
-plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y')) 
-
-plt.tight_layout()  
-plt.show()
-```
-We observe from this plot that producing milk in Switzerland is much more expensive than in other countries.
-
-### Univariate Analysis - Switzerland
-
-The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration. 
-To do this, we are going to use the variable 'swiss_production_data' we created before, which includes all the Swiss production and sales regions.
-
-## Distribution of milk production for each Swiss region.
-
-```{python}
-# Count the occurrences of each type of product
-product_counts = swiss_production_data['Provenance du produit'].value_counts()
-
-# Define the desired order of regions
-order = ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']
-
-# Re-index the data in the desired order
-product_counts = product_counts.reindex(order)
-
-# Create a bar chart
-plt.figure(figsize=(10, 6))
-bars = plt.bar(product_counts.index, product_counts.values, color=['red', 'green', 'blue', 'orange', 'purple'])
-
-# Detailed descriptions for each region 
-labels = ['Région 1 : Genève, Vaud, Fribourg, Neuchâtel, Jura', 
-          'Région 2 : Berne, Lucerne, Unterwald, Uri, Zoug and Schwyz', 
-          'Région 3 : Bâle-Campagne & Bâle-Ville, Argovie and Soleure.',
-          'Région 4 : Zurich, Schaffhouse, Thurgovie, Appenzell, St.-Gall, Schwyz, Glaris and Grisons',
-          'Région 5 : Valais and Tessin.']
-
-for bar, label in zip(bars, labels):
-    bar.set_label(label)
-    
-plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-
-plt.title('Distribution de la production de lait en Suisse')
-plt.xlabel('Provenance du lait')
-plt.ylabel('Nombre d’Occurrences')
-plt.show()
-print(product_counts)
-```
-
-We can see that regions 1, 2 and 4 produce a greater quantity of milk than regions 3 and 5.  Créer un tableau affichant les composantes des régions suisses.
-
-## Cost of production 
-
-Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
-
-```{python}
-swiss_histogram = pd.read_csv('Swiss_Production.csv')
-
-# plot distribution of the cost of production, all regions combined.
-plt.hist(swiss_histogram['Prix'], bins=50, density=True, alpha=0.5)
-plt.xlabel('Price in centimes')
-plt.ylabel('Density')
-plt.title('Distribution of the cost of production in Switzerland')
-plt.show()
-```
-
-Regions 5 and 1 are more expensive than other regions. Region 3 has the lowest price in Switzerland.
-In order to explain this difference in density between the different regions, we are going to make a boxplot with the five regions.
-
-```{python}
-# plot la dispersion des prix pour chaque région, pour potentiellement permettre d'expliquer cet écart de densité.
-sns.boxplot(x='Origin', y='Price', data=swiss_production_data)
-plt.title('Price distribution by region')
-plt.show()
-```
-
-Regions 1 and 3 show greater price stability with shorter boxes, indicating less dispersion. Regions 5 and 4 show greater price volatility, as indicated by wider price ranges and the presence of outliers.
-
-
-### Multivariate Analysis - Switzerland
-## Average milk price per system of production over time
-
-```{python}
-# plot "Changes in the average production price as a function of the production system"
-# Calculate average prices for each date and production system
-swiss_production_data_moyenne = swiss_production_data.groupby(['Date', 'Système de production'])['Prix'].mean().reset_index()
-
-# Select unique production systems
-systemes_production = swiss_production_data['Système de production'].unique()
-
-# Create a graph for each production system
-plt.figure(figsize=(12, 6))
-
-for systeme in systemes_production:
-# Filter the DataFrame for each production system
-swiss_production_data_filtre = swiss_production_data_moyenne[swiss_production_data_moyenne['Système de production'] == systeme]
-# Draw the curve for the filtered production system
-plt.plot(swiss_production_data_filtre['Date'], swiss_production_data_filtre['Prix'],marker='.', linestyle='-', label=systeme)
-
-plt.title('Average price trend by production system in Switzerland')
-plt.xlabel('Date')
-plt.ylabel('Average Price (cents)')
-plt.legend(title='System of production', bbox_to_anchor=(1.05, 1), loc='upper left')  # Add a legend 
-plt.grid(True, which='both', linestyle='--', linewidth=0.5)
-plt.xticks(rotation=45) 
-
-plt.tight_layout()  
-plt.show()
-```
-
-The average price per kg of milk produced was higher in early 2001, around 80 cents for conventional milk production and over 95 cents for organic milk. 
-The 'unknown' data are highly correlated with the 'conventional' data. 
-We note a seasonality in the data, with a non-linear trend: a downward trend between 2001 and 2016 and an upward trend between 2016 and 2024. We'll come back to this later in the report.
-There was a spike in prices in period 2008, due to the global financial crisis.
-
-
-## Average price of milk production, by region and production system
-
-```{python}
-swiss_production_data = pd.read_csv('Swiss_Production.csv')
-swiss_production_data['Date'] = pd.to_datetime(swiss_production_data['Date']).dt.year
-swiss_production_data = swiss_production_data[swiss_production_data['Date'].between(2001, 2024)]
-
-swiss_production_data.sort_values(by=['Provenance du produit', 'Date'], inplace=True)
-
-swiss_production_data['Provenance du produit'] = pd.Categorical(swiss_production_data['Provenance du produit'],
-                                                             categories=['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5'],
-                                                             ordered=True)
-
-fig = px.bar(
-    swiss_production_data, 
-    x='Provenance du produit', 
-    y='Prix', 
-    color='Système de production', 
-    barmode='group',
-    animation_frame='Date',
-     category_orders={"Provenance du Lait": ['Région 1', 'Région 2', 'Région 3', 'Région 4', 'Région 5']}
-)
-
-fig.update_layout(
-    title_text='Average price of milk production, by region and production system',
-    xaxis_title='Origin',
-    yaxis_title='Average Price in centimes',
-)
-
-fig.update_traces(
-    hovertemplate='Provenance du produit: %{x}<br>Système de production: %{marker.color}<br>Date: %{animation_frame}<br>Prix:%{y}'
-    )
-    
-years = swiss_production_data['Date'].unique()
-steps = []
-for year in years:
-    step = dict(
-        method='animate',
-        label=str(year),
-        args=[[str(year)], {'frame': {'duration': 300, 'redraw': True}, 'mode': 'immediate'}]
-    )
-    steps.append(step)
-
-# Add the slider to the figure.
-fig.update_layout(
-    sliders=[{'steps': steps}]
-)
-
-fig.layout.updatemenus[0].buttons = []
-fig.show()
-
-```
-
-Regions 5 and 3 have not produced organic milk since 2001. Region 3 is the weakest region on the Swiss milk market, with lower production and a lower price than the other regions. This may be due to the location of the areas within this region.
-
-
-### Wrangling and Cleaning
+We start by removing the columns with no value or unique value, and the variables that are not relevant for our analysis. After proceeding, we end up with a sub-data set of 6 variables.
 
 ```{r}
-library(data.table)
+# Importer les données
+data <- read.csv('../data/Données_marché_Lait.csv')
 
+# Faire une copie des données
+clean_data <- data
+
+# Supprimer les colonnes avec des valeurs uniques
+columns_to_drop <- c('Devise', 'Composants.de.coûts', 'Devise', 'Type.de.données', 'Source.de.données', 
+                     'Groupe.de.produits', 'Commerce.extérieur', 'Indicateur', 'Marché', 
+                     'Propriétés.du.produit', "Mode.d.utilisation", 'Unité', 'Produit', 
+                     'Echelon.de.création.de.valeur', 'Echelon.de.création.de.valeur_Détail')
+
+clean_data <- clean_data %>%
+  select(-all_of(columns_to_drop))
+
+# Convertir la colonne 'Date' en format Date (mois-année)
+clean_data$Date <- parse_date_time(clean_data$Date, orders = "my")
+
+# Renommer les colonnes
+clean_data <- clean_data %>%
+  rename(
+    `System of production` = `Système.de.production`,
+    `Product origin` = `Provenance.du.produit`,
+    `Product subgroup` = `Sous.groupe.de.produits`,
+    `Sales region` = `Région.de.vente`,
+    `Price` = `Prix`
+  )
+
+# Changer les valeurs catégorielles dans les colonnes spécifiées
+clean_data <- clean_data %>%
+  mutate(`System of production` = recode(`System of production`, 'Conventionnel' = 'Conventional'),
+         `Product origin` = recode(`Product origin`,
+                                   'Région 1' = 'Region 1',
+                                   'Région 2' = 'Region 2',
+                                   'Région 3' = 'Region 3',
+                                   'Région 4' = 'Region 4',
+                                   'Région 5' = 'Region 5',
+                                   'Suisse' = 'Switzerland',
+                                   'Reste du monde, non suisse' = 'Rest of the world, non-Swiss',
+                                   'Nouvelle-Zélande' = 'New Zealand',
+                                   'Italie' = 'Italy',
+                                   'UE' = 'EU',
+                                   'Allemagne' = 'Germany',
+                                   'Autriche' = 'Austria'),
+         `Product subgroup` = recode(`Product subgroup`,
+                                     'Lait cru CH' = 'CH Milk ',
+                                     'Lait cru, International' = 'International Milk'),  # Ajustez selon vos données
+         `Sales region` = recode(`Sales region`,
+                                 'Suisse' = 'Switzerland',
+                                 'Nouvelle-Zélande' = 'New Zealand',
+                                 'Italie' = 'Italy',
+                                 'UE-28' = 'EU-28',
+                                 'Allemagne' = 'Germany',
+                                 'Autriche' = 'Austria'))  # Ajustez selon vos données
+
+# Afficher les données en utilisant reactable
+reactable(
+  head(clean_data,1000),  
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
+#### Description
+
+The data covers the period from January 2001 to January 2024. 
+It provides information of the type of system of production : conventional, bio, or IP Swiss production of milk. 
+The origin and the sales region of the milk include Switzerland and its regions, as well as other international countries. This will enable us to carry out comparative analyses of Swiss and international milk prices.
+The 'Price' column represents the weighted average prices per quantity, mainly at the farm. 
+
+```{r}
+# Créez une table tibble avec des descriptions des variables
+variable_table <- tibble(
+  Variable = c("Date", "System of production", "Product origin", "Product subgroup", "Sales region", "Price"),
+  Description = c(
+    "The date when the data was recorded, in a year-month-day format.",
+    "The system of production for the product.",
+    "The origin of the product.",
+    "The subgroup to which the product belongs.",
+    "The region where the product is sold.",
+    "The price in centimes of the product."
+  )
+)
+
+# Affichez la table avec kableExtra
+variable_table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+```
+
+
+#### Missing Values
+
+Then, we calculate the percentage of missing values for each characteristics and filter out those without. 
+
+```{r}
+# Calculer le pourcentage de NaN pour chaque colonne
+nan_percent <- clean_data %>%
+  summarise(across(everything(), ~mean(is.na(.)) * 100)) %>%
+  pivot_longer(everything(), names_to = "Colonne", values_to = "Pourcentage_de_NaN")
+
+# Filtrer pour garder seulement les colonnes avec NaN
+nan_percent <- nan_percent %>%
+  filter(Pourcentage_de_NaN > 0)
+```
+
+The columns with missing values on our sub data set are: Sales region and System of production.
+The 'System of production' has a higher percentage of missing values, around 37.6%.
+However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity.
+As for Sales region, the percentage of missing values is relatively low thus we keep it. 
+
+### Swiss dairy products market
+#### Wrangling & Cleaning
+
+The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
+To do this, we are going to create a sub data set `swiss_production_data` that will only keep the Swiss regions in 'Product origin'.
+
+```{r}
+# Sélectionner les colonnes spécifiées
+selected_columns <- c('Date', 'System of production', 'Product origin', 'Price')
+subset_data <- clean_data %>%
+  select(all_of(selected_columns))
+
+# Définir les régions à conserver
+regions_to_keep <- c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5')
+swiss_production_data <- subset_data %>%
+  filter(`Product origin` %in% regions_to_keep)
+
+# Remplacer les valeurs manquantes par 'Unknown'
+swiss_production_data <- swiss_production_data %>%
+  mutate(across(everything(), ~replace_na(., 'Unknown')))
+
+# Afficher les données en utilisant reactable
+reactable(head(swiss_production_data,1000),
+ 
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+```
+
+
+#### Description
+
+Here is the geographical distribution of the 5 regions in Switzerland. 
+
+```{r}
+# Créez une table tibble avec des descriptions des variables
+table <- tibble(
+  Variable = c("Region 1", "Region 2", "Region 3", "Region 4", "Region 5"),
+  Description = c(
+    "Geneva, Vaud, Fribourg, Neuchâtel, Jura and the French-speaking parts of the canton of Bern (administrative district of Bernese Jura).",      "Bern, except the administrative district of Jura Bernois, Lucerne, Unterwalden : Obwalden. Nidwalden, Uri, Zug and part of the canton of      Schwyz (district of Schwyz, Gersau and Küssnacht).",
+    "Basel-Landschaft and Basel-Stadt, Aargau and Solothurn",
+    "Zurich, Schaffhausen, Thurgau. Appenzell (Inner and Outer Rhodes), St. Gallen, part of Canton Schwyz (districts of Einsiedeln, March and       Höfe), Glarus, Graubünden",
+    "Valais and Ticino"
+  )
+)
+
+# Affichez la table avec kableExtra
+table %>%
+  kbl() %>%
+  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
+```
+
+```{r}
 file_path <- "../data/"
 
 df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
@@ -654,7 +211,8 @@ variable_table %>%
 
 ### Description
 
-This data set explains the Milk price to producers over time. Essential for Macro Analysis of the milk industry in Switzerland.
+This data set explains the Milk price to producers over time.
+Essential for Macro Analysis of the milk industry in Switzerland.
 
 Have a look :
 
@@ -730,11 +288,15 @@ correct_city_names = {
 df['Row Labels'] = df['Row Labels'].apply(lambda x: correct_city_names.get(x, x))
 ```
 
-The dataset from 2023 was meticulously cleaned and standardized to ensure accuracy in our analysis. Initial steps included loading the data from an Excel file and renaming columns to reflect clearer, month-specific sales data for easier readability. Additionally, we corrected city names to maintain consistency across datasets. This included mapping various forms of city names to their standardized counterparts (e.g., 'Bâle' to 'Basel').
+The dataset from 2023 was meticulously cleaned and standardized to ensure accuracy in our analysis.
+Initial steps included loading the data from an Excel file and renaming columns to reflect clearer, month-specific sales data for easier readability.
+Additionally, we corrected city names to maintain consistency across datasets.
+This included mapping various forms of city names to their standardized counterparts (e.g., 'Bâle' to 'Basel').
 
 #### Description
 
-The dataset is very light and contains monthly sales data for the year 2023. It is essential however for the analysis of the sales of Lait Equitable in different Manor stores.
+The dataset is very light and contains monthly sales data for the year 2023.
+It is essential however for the analysis of the sales of Lait Equitable in different Manor stores.
 
 Here is a preview of the cleaned and structured data:
 
@@ -786,7 +348,9 @@ reactable(
 
 #### Wrangling and Cleaning
 
-Following the methodology established with the 2023 dataset, the 2022 sales data was similarly processed. The data from 2022, while structurally different, was also standardized to facilitate comparison and analysis. This included renaming columns to ensure uniformity in location names across both datasets.
+Following the methodology established with the 2023 dataset, the 2022 sales data was similarly processed.
+The data from 2022, while structurally different, was also standardized to facilitate comparison and analysis.
+This included renaming columns to ensure uniformity in location names across both datasets.
 
 ```{python}
 # Load the data for 2022
@@ -816,7 +380,8 @@ df_2022_total_sales.columns = ['Location', 'Total Sales 2022']
 
 #### Description
 
-The 2022 dataset, unlike the 2023 dataset, includes a variety of products, each recorded with sales figures across different locations. This dataset is notably less complex, focusing on total sales rather than monthly breakdowns, yet provides critical insights into the sales performance of different products.
+The 2022 dataset, unlike the 2023 dataset, includes a variety of products, each recorded with sales figures across different locations.
+This dataset is notably less complex, focusing on total sales rather than monthly breakdowns, yet provides critical insights into the sales performance of different products.
 
 ```{r}
 # Load the 2022 sales data
@@ -902,15 +467,19 @@ reactable(
 )
 ```
 
-The 2022 sales data has been aggregated and standardized for each location. The merged dataset now shows the total sales per location for both 2022 and 2023. This dataset offers a comprehensive view of Lait Equitable's sales dynamics over two consecutive years, highlighting trends and changes in consumer behavior across different locations.
+The 2022 sales data has been aggregated and standardized for each location.
+The merged dataset now shows the total sales per location for both 2022 and 2023.
+This dataset offers a comprehensive view of Lait Equitable's sales dynamics over two consecutive years, highlighting trends and changes in consumer behavior across different locations.
 
 ### Political Parties Dataset
 
 #### Wrangling and Cleaning
 
-The analysis starts by importing two datasets: sales data (annual sales of fair trade milk) and political party data (support percentages for major parties by location). The political data is cleaned to match commune names in the sales data and transformed into party presence percentages.
+The analysis starts by importing two datasets: sales data (annual sales of fair trade milk) and political party data (support percentages for major parties by location).
+The political data is cleaned to match commune names in the sales data and transformed into party presence percentages.
 
-Next, the cleaned political data is merged with the sales data based on commune names. This merged dataset enables a combined analysis of political party presence and sales performance.
+Next, the cleaned political data is merged with the sales data based on commune names.
+This merged dataset enables a combined analysis of political party presence and sales performance.
 
 ```{r}
 # Read sales data from Excel
@@ -938,9 +507,11 @@ party_data_cleaned <- party_data_cleaned %>%
 merged_data <- merge(sales_data, party_data_cleaned, by = "Location")
 ```
 
-The analysis starts by importing one other dataset: revenue per capita per commune data. The revenue data is cleaned to match commune names in the sales data.
+The analysis starts by importing one other dataset: revenue per capita per commune data.
+The revenue data is cleaned to match commune names in the sales data.
 
-Next, the cleaned revenue data is merged with the sales data based on commune names. This merged dataset enables a combined analysis of revenue per capita per commune and sales performance.
+Next, the cleaned revenue data is merged with the sales data based on commune names.
+This merged dataset enables a combined analysis of revenue per capita per commune and sales performance.
 
 ```{r}
 # Load the datasets

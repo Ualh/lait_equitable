@@ -1,4 +1,371 @@
 ### Exploratory data analysis
+
+#### General analysis of dairy products market 
+
+In order to gain a better understanding of Lait Equitable sales, we're going to start with a global analysis of the dairy market to get an idea of how milk prices work in Switzerland.
+The objective is to move from a macro-economic analysis to a micro-economic analysis with Fair Milk.
+The farm-gate price of milk is influenced by a number of factors, including milk production costs, the type of farming and the market situation in Switzerland and abroad, with demand tending to outstrip supply.
+The farmgate milk price is a weighted average of the prices actually paid to producers. 
+Since 2017, the annual average farm gate milk price has risen steadily and continues its growth.
+
+##### Distribution of swiss & international milk 
+
+There are 2 types of milk: international milk and CH milk in the column 'Product subgroup'. It would be interesting to compare the percentages of these two types of milk in order to analyse whether the milk produced in Switzerland is significant or not.
+
+```{r}
+# Lire les données
+clean_data <- read.csv('../data/clean_data.csv')
+
+# Compter les occurrences
+occurrences <- clean_data %>%
+  count(`Product.subgroup`) %>%
+  rename(`Product.subgroup` = `Product.subgroup`, `Nombre d'occurrences` = n)
+
+# Créer l'histogramme interactif avec Plotly
+fig <- plot_ly(
+  data = occurrences, 
+  x = ~`Product.subgroup`, 
+  y = ~`Nombre d'occurrences`, 
+  type = 'bar', 
+  text = ~`Nombre d'occurrences`,
+  textposition = 'outside',
+  hoverinfo = 'text',
+  hovertext = ~paste('Frequency:', `Nombre d'occurrences`),
+  marker = list(color = c('#87CEEB', '#90EE90'))  # Couleurs douces
+) %>%
+  layout(
+    title = 'Occurrence of "CH milk" and "international milk" products',
+    xaxis = list(title = 'Product subgroup'),
+    yaxis = list(title = 'Frequency'),
+    margin = list(l = 100, r = 100, t = 50, b = 50)
+  )
+
+# Afficher le graphique
+fig
+```
+
+The histogram shows a higher percentage of CH milk than International Milk. This suggests that the Swiss dairy market is thriving. 
+
+##### Milk price trends by country
+
+We are going to show price trends by country and carry out a macroeconomic analysis. The column 'Product origin' has 10 different origins, which are shown below.
+
+```{r}
+# Lire les données
+clean_data <- read.csv('../data/clean_data.csv')
+
+# Définir les valeurs à exclure
+regions_to_exclude <- c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5')
+
+# Filtrer les données en excluant ces valeurs
+filtered_data <- clean_data %>%
+  filter(!`Product.origin` %in% regions_to_exclude)
+
+# Convertir la colonne 'Date' en format Date si nécessaire
+filtered_data$Date <- ymd(filtered_data$Date)
+
+# Calculer le prix moyen par 'Product origin' et 'Date'
+average_price <- filtered_data %>%
+  group_by(`Product.origin`, Date) %>%
+  summarise(Average_Price = mean(Price, na.rm = TRUE), .groups = 'drop') %>%
+  ungroup()
+
+# Créer un graphique interactif avec Plotly
+fig <- plot_ly(data = average_price, x = ~Date, y = ~Average_Price, color = ~`Product.origin`, type = 'scatter', mode = 'lines')
+
+# Personnaliser la couleur pour la Suisse
+fig <- fig %>%
+  layout(
+    title = 'Average milk price by country over time',
+    xaxis = list(title = 'Year', tickformat = "%Y", dtick = "M12", tickangle = 45),
+    yaxis = list(title = 'Average price'),
+    legend = list(title = list(text = 'Origin'), x = 1.05, y = 1),
+    margin = list(l = 50, r = 50, t = 50, b = 50)
+  )
+
+# Mettre en évidence la Suisse en rose
+fig <- fig %>%
+  add_trace(
+    data = average_price %>% filter(`Product.origin` == "Switzerland"),
+    x = ~Date, y = ~Average_Price,
+    type = 'scatter', mode = 'lines',
+    line = list(color = 'pink'),
+    name = 'Switzerland'
+  )
+
+# Afficher le graphique
+fig
+```
+
+We can see that Switzerland is far superior to other countries in terms of price, over the entire period observed, from 2001 to 2024. Given that Switzerland is the most expensive of all the countries listed, this is not surprising. However, the difference in centimes remains significant, up to twice the price or more.
+
+
+
+#### Analysis of the Swiss dairy products market
+
+The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
+Now we're going to focus on Switzerland and its milk production. To do this, we are going to use our sub data set 'swiss_production_data'.
+
+##### Distribution of milk cost for Switzerland
+
+```{r}
+# Charger le fichier CSV
+swiss_production_data <- read.csv('../data/swiss_production_data.csv')
+
+# Créer le graphique de densité
+gg_density <- ggplot(swiss_production_data, aes(x = Price)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  labs(
+    x = "Price in centimes",
+    y = "Density",
+    title = "Density Plot of Production Cost in Switzerland"
+  ) +
+  theme_minimal()
+
+# Convertir le graphique ggplot en graphique interactif avec plotly
+plotly_density <- ggplotly(gg_density)
+
+# Afficher le graphique interactif
+plotly_density
+```
+
+
+This distribution, which covers all Swiss regions, gives an average price of around 75.25 centimes. The distribution is asymmetrical, with a more gradual rise to this value followed by an sharp fall.
+
+Given that the sample size differs for each region, we represent the distribution of the cost of production for each region in terms of density to be able to compare them.
+
+```{r}
+# Définir la nouvelle palette de couleurs
+palette <- c("red", "green", "blue", "orange", "purple")
+
+# Tri des régions
+regions_sorted <- sort(unique(swiss_production_data$`Product.origin`))
+
+# Ajouter une colonne 'Color' pour assigner une couleur à chaque région
+swiss_production_data <- swiss_production_data %>%
+  mutate(Color = factor(`Product.origin`, levels = regions_sorted, labels = palette))
+
+# Créer le graphique de densité
+gg_density <- ggplot(swiss_production_data, aes(x = Price, color = `Product.origin`, fill = `Product.origin`)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(values = palette) +
+  scale_color_manual(values = palette) +
+  labs(
+    x = "Price in centimes",
+    y = "Density",
+    title = "Distribution of Price Density by Region",
+    fill = "Sales regions",
+    color = "Sales regions"
+  ) +
+  theme_minimal()
+
+# Convertir le graphique ggplot en graphique interactif avec plotly
+plotly_density <- ggplotly(gg_density, tooltip = c("x", "y", "color"))
+
+# Afficher le graphique interactif
+plotly_density
+```
+
+The region 1 is the most expensive region in comparison to the others and the region 3 shows the lowest price in Switzerland.
+
+
+##### Distribution of the production milk in kg by region
+
+We will now analyse the distribution of kg of milk produced across the different regions. This will give us an overview of the regions with the highest production rates and therefore the most competitive regions in terms of production. 
+
+```{r}
+# Installer les packages nécessaires si ce n'est pas déjà fait
+if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
+if (!requireNamespace("plotly", quietly = TRUE)) install.packages("plotly")
+
+# Charger les packages
+library(ggplot2)
+library(plotly)
+
+# Compter les occurrences de chaque type de produit
+product_counts <- as.data.frame(table(swiss_production_data$`Product.origin`))
+names(product_counts) <- c("Product.origin", "Count")
+
+# Définir l'ordre désiré des régions
+order <- c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5')
+
+# Réindexer les données dans l'ordre désiré
+product_counts$`Product.origin` <- factor(product_counts$`Product.origin`, levels = order)
+
+# Ajuster les couleurs pour les rendre plus claires
+adjusted_colors <- c(
+  'Region 1' = adjustcolor('red', alpha.f = 0.6),
+  'Region 2' = adjustcolor('green', alpha.f = 0.6),
+  'Region 3' = adjustcolor('blue', alpha.f = 0.6),
+  'Region 4' = adjustcolor('orange', alpha.f = 0.6),
+  'Region 5' = adjustcolor('purple', alpha.f = 0.6)
+)
+
+# Créer un bar chart avec ggplot2
+p <- ggplot(product_counts, aes(x = `Product.origin`, y = Count, fill = `Product.origin`, text = paste("Product.origin:", `Product.origin`, "<br>Count:", Count))) +
+  geom_bar(stat = "identity") +
+  scale_fill_manual(values = adjusted_colors) +
+  labs(title = 'Distribution of milk production in Switzerland', x = 'Product origin', y = 'Number of Occurrences') +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  ylim(0, max(product_counts$Count) * 1.2)
+
+# Rendre le graphique interactif avec plotly
+fig <- ggplotly(p, tooltip = c("text"))
+
+# Afficher le graphique
+fig
+```
+
+Milk production is evenly distributed between regions 1, 2 and 4. However, regions 3 and 5 show lower production, particularly region 3. This distribution of production can be explained by the location of the regions.
+
+
+##### Average milk price per system of production over time
+
+For the multivariate analysis, we're going to focus on the production system and analyse the impact of the production system on price.
+
+```{r}
+library(tidyverse)
+library(plotly)
+
+# Convertir la colonne 'Date' en datetime
+swiss_production_data$Date <- as.Date(swiss_production_data$Date, format="%Y-%m-%d")
+
+# Calculer le prix moyen par système de production et par date
+average_price <- swiss_production_data %>%
+  group_by(`System.of.production`, Date) %>%
+  summarise(Price = mean(Price, na.rm = TRUE), .groups = 'drop')
+
+# Définir les couleurs pour chaque système de production
+colors <- c("Bio" = "green", "Conventional" = "orange", "Unknown" = "blue")
+
+# Créer une liste de traces pour chaque système de production
+traces <- list()
+systems <- unique(average_price$`System.of.production`)
+for (system in systems) {
+  subset <- filter(average_price, `System.of.production` == system)
+  trace <- list(
+    x = subset$Date,
+    y = subset$Price,
+    mode = 'lines',
+    name = system,
+    type = 'scatter',
+    line = list(color = colors[system])
+  )
+  traces <- append(traces, list(trace))
+}
+
+# Créer la figure
+fig <- plot_ly(width = 1000)
+for (trace in traces) {
+  fig <- add_trace(fig, x = trace$x, y = trace$y, mode = trace$mode, name = trace$name, type = trace$type, line = trace$line)
+}
+
+# Définir les années uniques pour l'axe x
+years <- unique(format(average_price$Date, "%Y"))
+
+# Ajouter des titres et des légendes, et ajuster les paramètres de l'axe x et y
+fig <- layout(fig,
+              title = 'Average Production Price by System of Production and Date',
+              xaxis = list(
+                title = 'Date',
+                tickmode = 'array',
+                tickvals = as.Date(paste0(years, "-01-01")),  # Afficher toutes les années
+                ticktext = years,
+                tickangle = -45,
+                tickfont = list(size = 10)
+              ),
+              yaxis = list(
+                title = 'Average Price in Centimes',
+                range = c(48, 105)  # Définir les limites de l'axe y
+              ),
+              legend = list(title = list(text = 'System.of.Production')),
+              margin = list(b = 100)  # Augmenter la marge inférieure pour les étiquettes pivotées
+)
+
+# Afficher le graphique
+fig
+```
+
+
+An organic production system means higher prices as shown on the graph. The average price per kg of milk produced was higher in early 2001, around 83.5 cents for conventional milk production and almost 1.00 CHF for organic milk. The highest price recorded until now.
+The 'unknown' data are highly correlated with the 'conventional' data, the two curves are overlapping.
+There is a fall in prices until 2007, followed by a peak in 2008, which can be explained by the 2008 financial crisis.
+We note a seasonality and a trend patterns. The non-linear trend is upward since 2017. Does this trend will continue to go upward ? What are the future predictions for prices? We will answer this question in the Analysis section.
+
+
+##### Average price of milk production, by region and production system
+
+This histogram provides a more in-depth analysis of production systems by region. 
+
+```{r}
+
+# # Convertir la colonne 'Date' en années
+# swiss_production_data$Date <- as.numeric(format(as.Date(swiss_production_data$Date, format="%Y-%m-%d"), "%Y"))
+# 
+# # Filtrer les données pour les années entre 2001 et 2024
+# swiss_production_data <- swiss_production_data %>%
+#   filter(Date >= 2001 & Date <= 2024)
+# 
+# # Calculer la moyenne des prix par 'Product origin', 'System of production' et 'Date'
+# average_price_data <- swiss_production_data %>%
+#   group_by(`Product.origin`, `System.of.production`, Date) %>%
+#   summarise(Avg_Price = mean(Price, na.rm = TRUE), .groups = 'drop')
+# 
+# # Convertir 'Product origin' en facteur avec un ordre spécifique
+# average_price_data$`Product.origin` <- factor(average_price_data$`Product.origin`,
+#                                               levels = c('Region 1', 'Region 2', 'Region 3', 'Region 4', 'Region 5'),
+#                                               ordered = TRUE)
+# 
+# # Créer le graphique animé
+# fig <- plot_ly(
+#   data = average_price_data,
+#   x = ~`Product.origin`,
+#   y = ~Avg_Price,
+#   color = ~`System.of.production`,
+#   frame = ~Date,
+#   type = 'bar'
+# )
+# 
+# # Mettre à jour la mise en page du graphique
+# fig <- fig %>% layout(
+#   title = 'Average price of milk production, by region and production system',
+#   xaxis = list(title = 'Origin'),
+#   yaxis = list(title = 'Average Price in centimes', range = c(0, 100))  # Ajuster la plage de l'axe des ordonnées
+# )
+# 
+# # Ajouter les infobulles personnalisées
+# fig <- fig %>% style(
+#   hovertemplate = 'Product origin: %{x}<br>Avg Price: %{y}'
+# )
+# 
+# # Créer les étapes de l'animation pour chaque année
+# years <- unique(average_price_data$Date)
+# steps <- lapply(years, function(year) {
+#   list(
+#     method = 'animate',
+#     label = as.character(year),
+#     args = list(list(year), list(frame = list(duration = 300, redraw = TRUE), mode = 'immediate'))
+#   )
+# })
+# 
+# # Ajouter le slider au graphique
+# fig <- fig %>% layout(
+#   sliders = list(list(steps = steps))
+# )
+# 
+# # Supprimer les boutons du menu de mise à jour
+# fig <- fig %>% layout(
+#   updatemenus = list(list(buttons = NULL))
+# )
+# 
+# # Afficher le graphique
+# fig
+```
+
+An interesting insight is that the region 3 and 5 do not have an organic production system since 2001. They only produce conventional milk. Region 3 is once again the poorest, showing the lowest milk production at a lower price over the whole period and with only one production system.
+
+
 ### Lait Equitable Products
 
 To provide a comprehensive understanding of Lait Equitable's sales trends throughout 2023, we performed a month-by-month sales analysis. This exploration helps identify seasonal effects, peak sales periods, and potential areas for strategic adjustments. Here’s a detailed breakdown of the approach and findings:
