@@ -1,13 +1,53 @@
+---
+editor: 
+  markdown: 
+    wrap: sentence
+---
+
 # Data
-## Market for dairy products in Switzerland
+
+-   Sources
+-   Description
+-   Wrangling/cleaning
+-   Spotting mistakes and missing data (could be part of EDA too)
+-   Listing anomalies and outliers (could be part of EDA too)
+
+### Market for dairy products in Switzerland
 
 The dairy market is an important sector of Swiss agriculture and the agri-food industry. The dairy industry accounts for around 20% of agricultural production. 
 
 Our data source is the Swiss Federal Office for Agriculture, OFAG. The dataset shows price trends on the dairy market at production level. The farmgate milk price is calculated on the basis of a monthly survey of the main milk buyers. These are the companies that buy milk directly from producers. International milk price trends are also shown for comparison purposes, we will look at this later.
 
-Source - [agrimarche](https://www.donnees-agrimarche.ch/donnees)
+Source - https://www.donnees-agrimarche.ch/donnees
 
-### Wrangling and Cleaning 
+```{r}
+# Installer les packages nécessaires si ce n'est pas déjà fait
+if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
+if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("lubridate")
+if (!requireNamespace("tidyr", quietly = TRUE)) install.packages("tidyr")
+if (!requireNamespace("forcats", quietly = TRUE)) install.packages("forcats")
+if (!requireNamespace("readxl", quietly = TRUE)) install.packages("readxl")
+if (!requireNamespace("data.table", quietly = TRUE)) install.packages("data.table")
+if (!requireNamespace("kableExtra", quietly = TRUE)) install.packages("kableExtra")
+if (!requireNamespace("plotly", quietly = TRUE)) install.packages("plotly")
+if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
+if (!requireNamespace("reactable", quietly = TRUE)) install.packages("reactable")
+if (!requireNamespace("readr", quietly = TRUE)) install.packages("readr")
+
+library(dplyr)
+library(lubridate)
+library(tidyr)
+library(forcats)
+library(readxl)
+library(data.table)
+library(kableExtra)
+library(plotly)
+library(ggplot2)
+library(reactable)
+library(readr)
+```
+
+#### Wrangling and Cleaning
 
 We start by removing the columns with no value or unique value, and the variables that are not relevant for our analysis. After proceeding, we end up with a sub-data set of 6 variables.
 
@@ -27,8 +67,7 @@ columns_to_drop <- c('Devise', 'Composants.de.coûts', 'Devise', 'Type.de.donné
 clean_data <- clean_data %>%
   select(-all_of(columns_to_drop))
 
-# Convertir la colonne 'Date' en format Date (mois-année)
-clean_data$Date <- parse_date_time(clean_data$Date, orders = "my")
+clean_data$Date <- as.Date(paste0("01-", clean_data$Date), format="%d-%m-%Y")
 
 # Renommer les colonnes
 clean_data <- clean_data %>%
@@ -67,16 +106,22 @@ clean_data <- clean_data %>%
                                  'Allemagne' = 'Germany',
                                  'Autriche' = 'Austria'))  # Ajustez selon vos données
 
+# Définir le chemin exact où enregistrer le fichier
+file_path <- '../data/clean_data.csv'
+
+# Enregistrer le DataFrame dans un fichier CSV à l'emplacement spécifié
+write.csv(clean_data, file = file_path, row.names = FALSE)
+```
+
+```{r}
+library(reactable)
+library(readr)
+
+# Lire le fichier CSV
+clean_data <- read_csv("../data/clean_data.csv", show_col_types = FALSE)
+
 # Afficher les données en utilisant reactable
-reactable(
-  head(clean_data,1000),  
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
+reactable(clean_data)
 ```
 
 #### Description
@@ -107,31 +152,19 @@ variable_table %>%
 ```
 
 
-#### Missing Values
-
-Then, we calculate the percentage of missing values for each characteristics and filter out those without. 
-
-```{r}
-# Calculer le pourcentage de NaN pour chaque colonne
-nan_percent <- clean_data %>%
-  summarise(across(everything(), ~mean(is.na(.)) * 100)) %>%
-  pivot_longer(everything(), names_to = "Colonne", values_to = "Pourcentage_de_NaN")
-
-# Filtrer pour garder seulement les colonnes avec NaN
-nan_percent <- nan_percent %>%
-  filter(Pourcentage_de_NaN > 0)
-```
-
 The columns with missing values on our sub data set are: Sales region and System of production.
 The 'System of production' has a higher percentage of missing values, around 37.6%.
 However, this is a key variable in our analysis so we keep it and replace missing information 'NaN' with 'Unknown' for clarity.
-As for Sales region, the percentage of missing values is relatively low thus we keep it. 
+As for Sales region, the percentage of missing values is relatively low thus we keep it.
+
+
 
 ### Swiss dairy products market
+
 #### Wrangling & Cleaning
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
-To do this, we are going to create a sub data set `swiss_production_data` that will only keep the Swiss regions in 'Product origin'.
+To do this, we are going to create a sub data set 'swiss_production_data' that will only keep the Swiss regions in 'Product origin'.
 
 ```{r}
 # Sélectionner les colonnes spécifiées
@@ -148,16 +181,19 @@ swiss_production_data <- subset_data %>%
 swiss_production_data <- swiss_production_data %>%
   mutate(across(everything(), ~replace_na(., 'Unknown')))
 
+# Définir le chemin exact où enregistrer le fichier
+file_path <- '../data/swiss_production_data.csv'
+
+# Enregistrer le DataFrame dans un fichier CSV à l'emplacement spécifié
+write.csv(swiss_production_data, file = file_path, row.names = FALSE)
+```
+
+```{r}
+# Lire le fichier CSV
+swiss_production_data <- read_csv("../data/swiss_production_data.csv", show_col_types = FALSE)
+
 # Afficher les données en utilisant reactable
-reactable(head(swiss_production_data,1000),
- 
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
+reactable(swiss_production_data)
 ```
 
 
@@ -183,68 +219,7 @@ table %>%
   kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
 ```
 
-```{r}
-file_path <- "../data/"
 
-df_producteur <- read_excel(paste0(file_path, "lait_cru_producteur.xlsx"), sheet = 1)
-
-df_producteur$date <- as.Date(df_producteur$date)
- library(kableExtra)
-# Create a tibble with variable descriptions for df_producteur
-variable_table <- tibble(
-  Variable = c("Date", "prix_bio", "prix_non_bio", "delta", "Delta_pourcent"),
-  Description = c(
-    "The date when the prices were recorded, in a year-month-day format.",
-    "The recorded price of organic milk on the given date.",
-    "The recorded price of non-organic milk on the given date.",
-    "The absolute difference between the organic and non-organic milk prices.",
-    "The percentage difference between the organic and non-organic milk prices."
-  )
-)
-
-# Display the table using kableExtra
-variable_table %>%
-  kbl() %>%
-  kable_styling(position = "center", bootstrap_options = c("striped", "bordered", "hover", "condensed"))
-
-```
-
-### Description
-
-This data set explains the Milk price to producers over time.
-Essential for Macro Analysis of the milk industry in Switzerland.
-
-Have a look :
-
-```{r}
-# create a new data cleaned
-df_producteur_show <- df_producteur %>%
-  mutate(delta = prix_bio - prix_non_bio,
-         delta_pourcent = (prix_bio - prix_non_bio) / prix_non_bio * 100) %>%
-  select(date, prix_bio, prix_non_bio, delta, delta_pourcent) %>%
-  #round all column  to 2 decimal places
-  mutate_if(is.numeric, round, 2) 
-
-#print max and min values for delta_pourcent
-# max_delta_pourcent <- max(df_producteur_show$delta_pourcent, na.rm = TRUE)
-# max_delta_pourcent
-# min_delta_pourcent <- min(df_producteur_show$delta_pourcent, na.rm = TRUE)
-# min_delta_pourcent
-
-#display cleaned data using reactable
-library(reactable)
-reactable(
-  df_producteur_show,  
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
-```
-
-Source - [asjdaksjdh](https://www.agridea.ch/fr/themes/production-animaliere/bovins/lait-cru/)
 
 ## Lait Equitable Sales
 
