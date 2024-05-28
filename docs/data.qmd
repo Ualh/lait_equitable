@@ -18,34 +18,7 @@ The dairy market is an important sector of Swiss agriculture and the agri-food i
 
 Our data source is the Swiss Federal Office for Agriculture, OFAG. The dataset shows price trends on the dairy market at production level. The farmgate milk price is calculated on the basis of a monthly survey of the main milk buyers. These are the companies that buy milk directly from producers. International milk price trends are also shown for comparison purposes, we will look at this later.
 
-Source - https://www.donnees-agrimarche.ch/donnees
-
-```{r}
-# Installer les packages nécessaires si ce n'est pas déjà fait
-if (!requireNamespace("dplyr", quietly = TRUE)) install.packages("dplyr")
-if (!requireNamespace("lubridate", quietly = TRUE)) install.packages("lubridate")
-if (!requireNamespace("tidyr", quietly = TRUE)) install.packages("tidyr")
-if (!requireNamespace("forcats", quietly = TRUE)) install.packages("forcats")
-if (!requireNamespace("readxl", quietly = TRUE)) install.packages("readxl")
-if (!requireNamespace("data.table", quietly = TRUE)) install.packages("data.table")
-if (!requireNamespace("kableExtra", quietly = TRUE)) install.packages("kableExtra")
-if (!requireNamespace("plotly", quietly = TRUE)) install.packages("plotly")
-if (!requireNamespace("ggplot2", quietly = TRUE)) install.packages("ggplot2")
-if (!requireNamespace("reactable", quietly = TRUE)) install.packages("reactable")
-if (!requireNamespace("readr", quietly = TRUE)) install.packages("readr")
-
-library(dplyr)
-library(lubridate)
-library(tidyr)
-library(forcats)
-library(readxl)
-library(data.table)
-library(kableExtra)
-library(plotly)
-library(ggplot2)
-library(reactable)
-library(readr)
-```
+Source - [agrimarche](https://www.donnees-agrimarche.ch/donnees)
 
 #### Wrangling and Cleaning
 
