@@ -1,13 +1,8 @@
 # Analysis
 
--   Answers to the research questions
--   Different methods considered
--   Competing approaches
--   Justifications
+## Forecasting 
 
-
-
-# Decomposition of Milk Price in Switzerland
+### Decomposition of Milk Price in Switzerland
 
 
 ```{r}
@@ -59,7 +54,8 @@ plot(decomposition$random, main = "Residual Component", ylab = "Residual")
 par(mfrow = c(1, 1))
 ```
 
-## Overall SARIMA forecast 
+
+### Overall SARIMA forecast 
 
 ```{r}
 # Assurez-vous que les dates sont de type Date et que 'Date' est l'index
@@ -113,7 +109,7 @@ However, there are a few points to consider:
 - confidence intervals show that there is some uncertainty around forecasts, indicating that it is prudent to consider a range of possible outcomes.
 
 
-## SARIMA Forecast for "Bio" and "Conventional"
+### SARIMA Forecast for "Bio" and "Conventional"
 
 We saw that our data showed a significant seasonal trend. The SARIMA model takes into account the seasonality of time series in its predictions. This is why the SARIMA model would be better suited to our data.
 
@@ -163,8 +159,7 @@ For Conventional Milk, price forecast shows a slight initial decline followed by
 Confidence intervals for both types of milk indicate similar uncertainty around forecasts, with areas of moderate and high uncertainty.
 
 
-
-# Exponential smoothing 
+### Exponential smoothing 
 
 ```{r}
 # Charger les packages nécessaires
@@ -212,7 +207,7 @@ For organic milk, the price forecasts show a stable overall trend, with a slight
 For non organic milk, the price Forecasts show a slight initial fall, followed by stabilization.
 
 
-# Holt-Winters - a voir si on garde 
+### Holt-Winters
 
 We apply the Holt-Winters model to predict the price over the next 12 months. This model is an extension of the simple exponential smoothing model. It takes trend and seasonality into account in its predictions for its two time series, since these two components play a crucial role as we have seen with the decomposition. We took seasonal = "multiplicative" because the multiplicative model shows lower AIC values, indicating a better fit than additive models.
 
@@ -248,276 +243,13 @@ For organic milk, the price forecasts show a stable overall trend, with a slight
 For non organic milk, the price Forecasts show a slight initial fall, followed by stabilization.
 
 
-# Comparison of all forecastings 
+### Comparison of all forecasting models 
 
 All four models effectively capture historical trends in organic and non-organic milk prices.
 Forecasts for 2024 are similar between the models, indicating upward trends for organic milk and stabilization for non-organic milk.
 Confidence intervals for all four models are similar, indicating moderate to high uncertainty.
 We observe that there are no major differences between the SARIMA, SARIMAX, ETS, and Holt-Winters Multiplicative models in the organic and non-organic milk price forecasts for 2024. 
 
-
-## Forecasting Next Year Milk Prices
-
-```{r}
-# re-arragen the df_producteur data in ascending order
-df_producteur <- df_producteur[order(df_producteur$date),]
-
-#creating tsibble for organic and non-organic milk prices
-df_producteur_ts_non_bio <- ts(df_producteur$prix_non_bio, start=c(2017, 12), frequency=12)
-df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=12)
-
-#convert the ts object to a tsiible object
-df_producteur_ts_non_bio <- as_tsibble(df_producteur_ts_non_bio)
-df_producteur_ts_bio <- as_tsibble(df_producteur_ts_bio)
-```
-
-### Naive Forecast
-
-```{r}
-# Fit a naive model
-fit_non_bio <- df_producteur_ts_non_bio %>% model(naive = NAIVE(value))
-fit_bio <- df_producteur_ts_bio %>% model(naive = NAIVE(value))
-
-# Forecast the next 12 months
-naive_forecast_non_bio <- fit_non_bio %>% forecast(h = 12)
-naive_forecast_bio <- fit_bio %>% forecast(h = 12)
-
-plot <- naive_forecast_non_bio %>%
-  autoplot(df_producteur_ts_non_bio, alpha = 0.5) +
-  labs(title = "Naive Forecast of Non-Organic Milk Prices",
-       x = "Date",
-       y = "Price") + guides(colour = guide_legend(title = "Forecast"))
-plot
-plot <- naive_forecast_bio %>%
-  autoplot(df_producteur_ts_bio, alpha = 0.5) +
-  labs(title = "Naive Forecast of Non-Organic Milk Prices",
-       x = "Date",
-       y = "Price") + guides(colour = guide_legend(title = "Forecast"))
-plot
-```
-
-We observe that this model is very vague because is just a naive model that assumes that the next value will be the same as the last value. But it gives us a starting point to compare with other models.
-
-### ARIMA Model
-
-#### Stationarity
-
-```{r}
-# re-arragen the df_producteur data in ascending order
-df_producteur <- df_producteur[order(df_producteur$date),]
-
-#creating tsibble for organic and non-organic milk prices
-df_producteur_ts_non_bio <- ts(df_producteur$prix_non_bio, start=c(2017, 12), frequency=12)
-df_producteur_ts_bio <- ts(df_producteur$prix_bio, start=c(2017, 12), frequency=12)
-#check for stationarity
-adf.test(df_producteur_ts_non_bio)
-adf.test(df_producteur_ts_bio)
-```
-
-We analyse the stationarity of the time series data for both organic and non-organic milk prices using the Augmented Dickey-Fuller (ADF) test. The Augmented Dickey-Fuller (ADF) test is commonly used to determine whether a unit root is present in a time series dataset. A unit root suggests that a time series is non-stationary, meaning its statistical properties such as mean and variance change over time. On the other hand, if the null hypothesis of the ADF test is rejected, it indicates that the time series is stationary.
-
-We do that because ARIMA models require the time series data to be stationary.
-
-The results of the ADF test for both time series `df_producteur_ts_non_bio` and `df_producteur_ts_bio` indicate:
-
--   Dickey-Fuller statistic value of -3
--   Lag order of 4
--   p-value of 0.08
-
-Solely based on the p-values provided (0.08), we cannot conclusively determine whether the time series data df_producteur_ts_non_bio and df_producteur_ts_bio are stationary or not. They might be stationary, but further analysis or additional tests might be needed for a more definitive conclusion.
-
-We can thus differenciate the data to make it stationary.
-
-```{r}
-#difference the time series
-df_producteur_ts_non_bio_diff <- diff(df_producteur_ts_non_bio)
-df_producteur_ts_bio_diff <- diff(df_producteur_ts_bio)
-
-#plot them to see the differentiation
-autoplot(df_producteur_ts_non_bio_diff)+ labs(title = "Differenced Time Series of Organic Milk Prices")
-autoplot(df_producteur_ts_bio_diff) + labs(title = "Differenced Time Series of Bio Milk Prices")
-
-#check for stationarity
-adf.test(df_producteur_ts_non_bio_diff)
-adf.test(df_producteur_ts_bio_diff)
-```
-
-The results of the ADF test for both differenced time series indicate:
-
--   Dickey-Fuller statistic value of -6
--   Lag order of 4
--   p-value of 0.01
-
-In this case, the p-value is smaller than the typical significance level of 0.05, indicating strong evidence against the null hypothesis. Therefore, based on the p-values provided (0.01), we can conclude that the differenced time series data are likely stationary.
-
-This suggests that after differencing, the time series data df_producteur_ts_non_bio and df_producteur_ts_bio have become stationary, which is often desirable for various time series analysis techniques and forecasting models.
-
-#### Fitting the ARIMA Model and Forecasting
-
-```{r}
-# Fit the ARIMA model
-fit_non_bio <- auto.arima(df_producteur_ts_non_bio, seasonal = FALSE)
-fit_bio <- auto.arima(df_producteur_ts_bio, seasonal = FALSE)
-
-# Forecast the next 12 months
-forecast_non_bio <- forecast(fit_non_bio, h = 12)
-forecast_bio <- forecast(fit_bio, h = 12)
-
-#show the components used for the ARIMA model
-fit_non_bio %>% summary()
-fit_bio %>% summary()
-
-#plot the forecasted values
-autoplot(forecast_non_bio) + labs(title = "Forecasted Prices of Non-Organic Milk")
-```
-
-```{r}
-autoplot(forecast_bio) + labs(title = "Forecasted Prices of Organic Milk")
-```
-
-#### Fit a SARIMA Model
-
-```{r}
-# Fit the SARIMA model
-fit_non_bio_sarima <- auto.arima(df_producteur_ts_non_bio, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
-fit_bio_sarima <- auto.arima(df_producteur_ts_bio, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
-
-# Forecast the next 12 months
-forecast_non_bio_sarima <- forecast(fit_non_bio_sarima, h = 12)
-forecast_bio_sarima <- forecast(fit_bio_sarima, h = 12)
-
-#plot the forecasted values
-autoplot(forecast_non_bio_sarima) + labs(title = "Forecasted Prices of Non-Organic Milk (SARIMA)")
-autoplot(forecast_bio_sarima) + labs(title = "Forecasted Prices of Organic Milk (SARIMA)")
-```
-
-#### Compare ARIMA and SARIMA forecast
-
-##### Organic Milk SARIMA vs ARIMA
-
-```{r}
-# compare forecast_bio vs forecast_bio_sarima Model using AIC
-
-```
-
-##### Non-Organic Milk SARIMA vs ARIMA
-
-```{r}
-# compare forecast_non_bio vs forecast_non_bio_sarima using AIC
-
-```
-
-#### Forecasted Prices ARIMA
-
-```{r}
-# Create a table of the forecasted values 
-forecast_table_arima <- tibble(
-  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
-  Non_Organic_Forecast = forecast_non_bio$mean,
-  Bio_Forecast = forecast_bio$mean
-)
-#round the forecasted values
-forecast_table_arima <- forecast_table_arima %>%
-  mutate(across(c(Non_Organic_Forecast, Bio_Forecast), ~round(., 2)))
-#show the forecasted values using reactable
-reactable(
-  forecast_table_arima,  
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
-#plot the forecasted values
-forecast_table_arima %>%
-  pivot_longer(cols = c(Non_Organic_Forecast, Bio_Forecast), names_to = "Type", values_to = "Forecasted_Price") %>%
-  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
-  geom_line() +
-  labs(title = "Forecasted Prices of Organic and Non-Organic Milk",
-       x = "Month",
-       y = "Price",
-       color = "Type") +
-  theme_minimal()
-```
-
-We used the mean values of the forecasted prices for both organic and non-organic milk to create a table and plot the forecasted prices for the next 12 months. The table provides a detailed view of the forecasted prices, while the plot visualizes the trend of the forecasted prices over time.
-
-#### Forecasted Prices SARIMA
-
-```{r}
-# Create a table of the forecasted values 
-forecast_table_sarima <- tibble(
-  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
-  Non_Organic_Forecast = forecast_non_bio_sarima$mean,
-  Bio_Forecast = forecast_bio_sarima$mean
-)
-#round the forecasted values
-forecast_table_sarima <- forecast_table_sarima %>%
-  mutate(across(c(Non_Organic_Forecast, Bio_Forecast), ~round(., 2)))
-#show the forecasted values using reactable
-reactable(
-  forecast_table_sarima,  
-  highlight = TRUE,  # Highlight rows on hover
-  defaultPageSize = 10,  # Display 10 rows per page
-  paginationType = "numbers",  # Use numbers for page navigation
-  searchable = TRUE,  # Make the table searchable
-  sortable = TRUE,  # Allow sorting
-  resizable = TRUE  # Allow column resizing
-)
-#plot the forecasted values
-forecast_table_sarima %>%
-  pivot_longer(cols = c(Non_Organic_Forecast, Bio_Forecast), names_to = "Type", values_to = "Forecasted_Price") %>%
-  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
-  geom_line() +
-  labs(title = "Forecasted Prices of Organic and Non-Organic Milk",
-       x = "Month",
-       y = "Price",
-       color = "Type") +
-  theme_minimal()
-```
-
-### Exponential Smoothing
-
-```{r}
-# Fit the ETS model
-fit_non_bio_ets <- ets(df_producteur_ts_non_bio)
-fit_bio_ets <- ets(df_producteur_ts_bio)
-
-# Forecast the next 12 months
-forecast_non_bio_ets <- forecast(fit_non_bio_ets, h = 12)
-forecast_bio_ets <- forecast(fit_bio_ets, h = 12)
-
-#plot the forecasted values
-autoplot(forecast_non_bio_ets) + labs(title = "Forecasted Prices of Non-Organic Milk (ETS)")
-autoplot(forecast_bio_ets) + labs(title = "Forecasted Prices of Organic Milk (ETS)")
-```
-
-```{r}
-# Create a table of the forecasted values
-forecast_table_ets <- tibble(
-  Month = seq(as.Date("2023-01-01"), by = "month", length.out = 12),
-  Non_Organic_Forecast_ETS = forecast_non_bio_ets$mean,
-  Bio_Forecast_ETS = forecast_bio_ets$mean
-)
-forecast_table_ets
-
-#plot the forecasted values
-forecast_table_ets %>%
-  pivot_longer(cols = c(Non_Organic_Forecast_ETS, Bio_Forecast_ETS), names_to = "Type", values_to = "Forecasted_Price") %>%
-  ggplot(aes(x = Month, y = Forecasted_Price, color = Type)) +
-  geom_line() +
-  labs(title = "Forecasted Prices of Organic and Non-Organic Milk (ETS)",
-       x = "Month",
-       y = "Price",
-       color = "Type") +
-  theme_minimal()
-```
-
-```{r}
-# compare ARIMA and ETS forecast
-
-```
 
 ## Lait Equitable Analysis
 

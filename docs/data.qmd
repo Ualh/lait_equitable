@@ -1,18 +1,5 @@
----
-editor: 
-  markdown: 
-    wrap: sentence
----
-
 # Data
-
--   Sources
--   Description
--   Wrangling/cleaning
--   Spotting mistakes and missing data (could be part of EDA too)
--   Listing anomalies and outliers (could be part of EDA too)
-
-### Market for dairy products in Switzerland
+## Market for dairy products in Switzerland
 
 The dairy market is an important sector of Swiss agriculture and the agri-food industry. The dairy industry accounts for around 20% of agricultural production. 
 
@@ -20,7 +7,7 @@ Our data source is the Swiss Federal Office for Agriculture, OFAG. The dataset s
 
 Source - [agrimarche](https://www.donnees-agrimarche.ch/donnees)
 
-#### Wrangling and Cleaning
+### Wrangling and Cleaning
 
 We start by removing the columns with no value or unique value, and the variables that are not relevant for our analysis. After proceeding, we end up with a sub-data set of 6 variables.
 
@@ -97,7 +84,7 @@ clean_data <- read_csv("../data/clean_data.csv", show_col_types = FALSE)
 reactable(clean_data)
 ```
 
-#### Description
+### Description
 
 The data covers the period from January 2001 to January 2024. 
 It provides information about the system of production used : conventional, bio, or IP Swiss.
@@ -125,7 +112,7 @@ variable_table %>%
 ```
 
 
-#### Missing Values
+### Missing Values
 
 Then, we calculate the percentage of missing values for each characteristics and filter out those without.
 
@@ -148,9 +135,9 @@ As for Sales region, the percentage of missing values is relatively low thus we 
 
 
 
-### Swiss dairy products market
+## Swiss dairy products market
 
-#### Wrangling & Cleaning
+### Wrangling & Cleaning
 
 The main objective of this project is to focus on milk producers in Switzerland and more specifically on their remuneration.
 To do this, we are going to create a sub data set 'swiss_production_data' that will only keep the Swiss regions in 'Product origin'.
@@ -186,7 +173,7 @@ reactable(swiss_production_data)
 ```
 
 
-#### Description
+### Description
 
 Here is the geographical distribution of the 5 regions in Switzerland. 
 
