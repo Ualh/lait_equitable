@@ -34,7 +34,6 @@ After proceeding, we end up with a sub-data set of 9 variables.
 Then, we calculate the number of missing values for each characteristics and filter out those without.
 
 ```{python}
-
 clean_data = data.copy()
 
 # Drop columns with unique values 
