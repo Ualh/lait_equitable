@@ -541,55 +541,97 @@ Conclusion: Applying the Pareto Principle in a business context where a minority
 2.  Ranking locations by sales to see the cumulative contribution of each location towards the total.
 3.  Identifying the point where approximately 20% of the locations contribute to around 80% of the sales.
 
-```{python}
-# Calculate the total sales for each year and the combined total to apply Pareto Principle
-merged_sales_data['Combined Sales'] = merged_sales_data['Total Sales 2022'] + merged_sales_data['Total Sales 2023']
+```{r}
+#create combine Combined_Sales data by adding col 'Total Sales 2022' and 'Total Sales 2023'
+df_merged_sales <- df_merged_sales %>%
+  mutate(Combined_Sales = `Total Sales 2022` + `Total Sales 2023`)
 
-# Sort locations by combined sales
-pareto_data = merged_sales_data.sort_values(by='Combined Sales', ascending=False)
+# Calculate the total combined sales of all locations
+total_combined_sales <- sum(df_merged_sales$Combined_Sales)
 
-# Calculate cumulative sales
-pareto_data['Cumulative Sales'] = pareto_data['Combined Sales'].cumsum()
+# Calculate the percentage contribution of each location
+percentage_contributions <- df_merged_sales %>%
+  mutate(Percentage_Contribution = (Combined_Sales / total_combined_sales) * 100)
+#sort ascending by percentage contribution
+percentage_contributions <- percentage_contributions %>%
+  arrange(desc(Percentage_Contribution))
 
-# Calculate the total of combined sales
-total_combined_sales = pareto_data['Combined Sales'].sum()
-
-# Calculate the percentage of cumulative sales
-pareto_data['Cumulative Percentage'] = 100 * pareto_data['Cumulative Sales'] / total_combined_sales
-
-# Find the point where about 20% of the locations contribute to approximately 80% of the sales
-pareto_data['Location Count'] = range(1, len(pareto_data) + 1)
-pareto_data['Location Percentage'] = 100 * pareto_data['Location Count'] / len(pareto_data)
-
-# Plotting the Pareto curve
-plt.figure(figsize=(12, 8))
-cumulative_line = plt.plot(pareto_data['Location Percentage'], pareto_data['Cumulative Percentage'], label='Cumulative Percentage of Sales', color='b', marker='o')
-plt.axhline(80.2, color='r', linestyle='dashed', linewidth=1)
-plt.axvline(33.3, color='green', linestyle='dashed', linewidth=1)
-plt.title('Pareto Analysis of Sales Across Locations')
-plt.xlabel('Cumulative Percentage of Locations')
-plt.ylabel('Cumulative Percentage of Sales')
-plt.legend()
-plt.grid(True)
-plt.show()
+# Sort the data by Percentage_Contribution in descending order
+percentage_contributions <- percentage_contributions %>%
+  arrange(desc(Percentage_Contribution)) %>%
+  mutate(Cumulative_Percentage = cumsum(Percentage_Contribution))
 ```
 
-Given this graph 33.2% of Manor locations are contributing to 80% of sales. This deviates from the typical Pareto 80/20 distribution, but it still shows a concentration of sales among a subset of stores.
+We will now identify a percentage of location that accounts for 80% of the sales. 
 
-#### Observations
+```{r}
+# Sort the data by Percentage_Contribution in descending order
+percentage_contributions <- percentage_contributions %>%
+  arrange(desc(Percentage_Contribution)) %>%
+  mutate(
+    Cumulative_Percentage = cumsum(Percentage_Contribution),
+    Location_Count = row_number()
+  )
 
-We will identify the top 33.3% of locations based on their cumulative sales contribution. This means selecting the smallest number of locations that together account for at least 80% of the total sales.
+# Total number of locations
+total_locations <- nrow(percentage_contributions)
+
+# Find the smallest number of locations contributing to approximately 80% of sales
+eighty_percent_point <- min(percentage_contributions$Location_Count[percentage_contributions$Cumulative_Percentage >= 80])
+
+# Percentage of locations contributing to 80% of sales
+percentage_of_locations <- eighty_percent_point / total_locations * 100
+
+# Create the Pareto chart
+pareto_chart <- ggplot(percentage_contributions, aes(x = reorder(Location, -Percentage_Contribution), y = Percentage_Contribution)) +
+  geom_bar(stat = "identity", aes(fill = Percentage_Contribution)) +
+  scale_fill_viridis(option = "D", direction = -1) +
+  geom_line(aes(y = Cumulative_Percentage), group = 1, color = "skyblue", size = 1.5) +
+  geom_vline(xintercept = eighty_percent_point, linetype = "dashed", color = "blue") +
+  geom_hline(yintercept = 80, linetype = "dashed", color = "blue") +
+  scale_y_continuous(sec.axis = sec_axis(~ ., name = "Cumulative Percentage")) +
+  labs(title = "Pareto Chart of Sales Contributions by Location",
+       subtitle = sprintf("Approx. %.1f%% of locations contribute to 80%% of sales", percentage_of_locations),
+       x = "Location",
+       y = "Percentage Contribution") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+# Print the chart
+pareto_chart
+```
+
+Given this graph the top locations in terms of sales are contributing to a heavy percentage of the total sales of 2022 and 2023. 
+
+The top 33.3% of locations based on their cumulative sales contribution account for 80% of all the sales. 
 
 The top-performing 33.3% of Manor locations that contribute to the majority of sales are:
+```{r}
+percentage_contributions
+# Find the cutoff point where the cumulative percentage reaches or just exceeds 80%
+cutoff_index <- which(percentage_contributions$Cumulative_Percentage >= 80)[1]
 
-```{python}
-# Calculate the threshold for the top 33.3% of locations
-top_third_index = int(len(pareto_data) * 0.34)
-
-# Identifying the top 33.3% of stores contributing to at least 80% of sales
-top_performing_stores = pareto_data.head(top_third_index)
-top_performing_stores
+# Filter the data to include only the locations contributing to 80% of the sales
+locations_80_percent <- percentage_contributions[1:cutoff_index, ] %>%
+  select(Location, `Total Sales 2022`, `Total Sales 2023`, Combined_Sales, Percentage_Contribution)
+locations_80_percent
+# Create a reactable table
+reactable_table <- reactable(locations_80_percent, columns = list(
+  Location = colDef(name = "Location", sortable = TRUE, searchable = TRUE),
+  'Total Sales 2022' = colDef(name = "Total Sales 2022"),
+  'Total Sales 2023' = colDef(name = "Total Sales 2023"),
+  Combined_Sales = colDef(name = "Combined Sales")), 
+  highlight = TRUE,  # Highlight rows on hover
+  defaultPageSize = 10,  # Display 10 rows per page
+  paginationType = "numbers",  # Use numbers for page navigation
+  searchable = TRUE,  # Make the table searchable
+  sortable = TRUE,  # Allow sorting
+  resizable = TRUE  # Allow column resizing
+)
+# Output the reactable table
+reactable_table
 ```
+
 
 ### Understanding Success Factors of Top-Performing Stores
 
